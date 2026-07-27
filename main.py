@@ -17,8 +17,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # ربط Gemini
 genai.configure(api_key=GEMINI_API_KEY)
 
-# اختيار نموذج Gemini
-model = genai.GenerativeModel("gemini-2.5-flash")
+# استخدام أحدث نموذج
+model = genai.GenerativeModel("gemini-3.6-flash")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -34,11 +34,14 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = model.generate_content(text)
 
-        await update.message.reply_text(response.text)
+        if response.text:
+            await update.message.reply_text(response.text)
+        else:
+            await update.message.reply_text("لم يتم إنشاء رد.")
 
     except Exception as e:
         await update.message.reply_text(
-            f"حدث خطأ:\n{e}"
+            f"حدث خطأ:\n{str(e)}"
         )
 
 
