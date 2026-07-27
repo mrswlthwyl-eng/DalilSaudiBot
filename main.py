@@ -1,3 +1,6 @@
+import os
+import google.generativeai as genai
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -7,7 +10,15 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = "8935363149:AAFacfjJb-vzgpb_dNg0sXnvmXmkhPxgxD8"
+# قراءة المتغيرات من Railway
+TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# ربط Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+
+# اختيار نموذج Gemini
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -20,9 +31,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    await update.message.reply_text(
-        f"📩 لقد أرسلت:\n\n{text}"
-    )
+    try:
+        response = model.generate_content(text)
+
+        await update.message.reply_text(response.text)
+
+    except Exception as e:
+        await update.message.reply_text(
+            f"حدث خطأ:\n{e}"
+        )
 
 
 def main():
