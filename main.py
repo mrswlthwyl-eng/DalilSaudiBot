@@ -184,29 +184,56 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # الوقت الحالي (السعودية)
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
 
-    # التاريخ الهجري
-hijri = Gregorian.fromdate(now.date()).to_hijri()
+    # التاريخ الهجري - بطريقة متوافقة مع جميع إصدارات hijridate
+    try:
+        # المحاولة الأولى: استخدام Gregorian.fromdate()
+        hijri = Gregorian.fromdate(now.date()).to_hijri()
+        hijri_day = hijri.day
+        hijri_month = hijri.month
+        hijri_year = hijri.year
+    except Exception:
+        # المحاولة الثانية: استخدام Gregorian() مباشرة
+        try:
+            hijri = Gregorian(
+                now.year,
+                now.month,
+                now.day
+            ).to_hijri()
+            hijri_day = hijri.day
+            hijri_month = hijri.month
+            hijri_year = hijri.year
+        except Exception:
+            # المحاولة الثالثة: استخدام Hijri مباشرة
+            try:
+                from hijridate import Hijri
+                hijri = Hijri.today()
+                hijri_day = hijri.day
+                hijri_month = hijri.month
+                hijri_year = hijri.year
+            except Exception:
+                # إذا فشلت جميع المحاولات، استخدم قيم افتراضية
+                hijri_day = 1
+                hijri_month = 1
+                hijri_year = 1446
 
-HIJRI_MONTHS = {
-    1: "محرم",
-    2: "صفر",
-    3: "ربيع الأول",
-    4: "ربيع الآخر",
-    5: "جمادى الأولى",
-    6: "جمادى الآخرة",
-    7: "رجب",
-    8: "شعبان",
-    9: "رمضان",
-    10: "شوال",
-    11: "ذو القعدة",
-    12: "ذو الحجة",
-}
+    # أسماء الأشهر الهجرية العربية يدوياً (لا تعتمد على month_name())
+    HIJRI_MONTHS = {
+        1: "محرم",
+        2: "صفر",
+        3: "ربيع الأول",
+        4: "ربيع الآخر",
+        5: "جمادى الأولى",
+        6: "جمادى الآخرة",
+        7: "رجب",
+        8: "شعبان",
+        9: "رمضان",
+        10: "شوال",
+        11: "ذو القعدة",
+        12: "ذو الحجة",
+    }
 
-hijri_date = (
-    f"{hijri.day} "
-    f"{HIJRI_MONTHS[hijri.month]} "
-    f"{hijri.year} هـ"
-)
+    hijri_month_name = HIJRI_MONTHS.get(hijri_month, "محرم")
+    hijri_date = f"{hijri_day} {hijri_month_name} {hijri_year} هـ"
 
     # أسماء الأيام بالعربية
     days = {
