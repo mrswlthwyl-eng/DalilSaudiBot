@@ -24,7 +24,7 @@ SYSTEM_PROMPT = """
 
 # إنشاء النموذج مع الـ System Prompt
 model = genai.GenerativeModel(
-    model_name="gemini-3.6-flash",
+    model_name="gemini-flash-lite-latest",
     system_instruction=SYSTEM_PROMPT,
 )
 
