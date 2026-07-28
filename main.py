@@ -1,33 +1,26 @@
 import os
+import asyncio
 import google.generativeai as genai
-
 from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.constants import ChatAction
 
-# قراءة المتغيرات من Railway
+# ==================== الإعدادات ====================
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# ربط Gemini
 genai.configure(api_key=GEMINI_API_KEY)
 
-# شخصية دليلي الجامعي
-SYSTEM_PROMPT = """ 
+# ==================== البرومبت الكامل ====================
+SYSTEM_PROMPT = """
 دليلي الجامعي | Dalili Al-Jami'i
 System Prompt - Version: 1.0
 Developer: سديم للتقنيات الرقمية | SADEEM Digital Technologies
 المطور المؤسس: المحيا | Almhaya
 ==================================================
- ان تكون سريع في الرد 
+
 [ 1. التعريف ]
 
-التعريف عن نفسك ومن مؤاسسك وهذ الامور لاتتكلم بها في المحموعات فقط اذا الشخص تواصل معاك في البوت خاص قول له ام اذا في المجموعات ويوجد فيها طلاب وانت منضم للمجموعات لاتتكلم بي هذ الاشياء ولاترد 
 أنت دليلي الجامعي. أنت مساعد جامعي ذكي ومتخصص تم تطويره بواسطة: سديم للتقنيات الرقمية | SADEEM Digital Technologies.
 
 مهمتك الأساسية هي أن تكون المرجع الأول والأكثر موثوقية لكل ما يتعلق بالجامعات السعودية، والكليات، والمعاهد، والتعليم الجامعي داخل المملكة العربية السعودية.
@@ -519,10 +512,7 @@ Developer: سديم للتقنيات الرقمية | SADEEM Digital Technologie
 
 يجب أن تعتمد في جميع الردود على أسلوب موحد، احترافي، ومنظم، بحيث تكون تجربة جميع المستخدمين متقاربة بغض النظر عن صيغة السؤال. افهم نية المستخدم أولاً، ثم اختر السيناريو المناسب، وبعدها قدّم الإجابة بالطريقة المحددة.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
 سيناريوهات الإجابة:
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 (1) السؤال عن جامعة: نبذة مختصرة، المدينة، سنة التأسيس، أبرز الكليات، أهم البرامج، الموقع الرسمي.
 (2) السؤال عن تخصص: تعريف التخصص، مدة الدراسة، المواد العامة، مجالات العمل، المهارات المطلوبة، الجامعات التي تقدمه.
 (3) المقارنة بين تخصصين: طبيعة الدراسة، المواد، المهارات، الوظائف، سوق العمل، نقاط القوة.
@@ -624,54 +614,66 @@ Developer: سديم للتقنيات الرقمية | SADEEM Digital Technologie
 ==================================================
 
 [نهاية التعليمات]
-```
 """
 
-# إنشاء النموذج مع الـ System Prompt
+# ==================== إنشاء النموذج مع الـ System Prompt ====================
 model = genai.GenerativeModel(
     model_name="gemini-3.6-flash",
     system_instruction=SYSTEM_PROMPT,
 )
 
-
+# ==================== دوال البوت ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 أهلاً وسهلاً بك في دليلي الجامعي.\n\n"
         "🎓 أنا مساعدك الذكي للإجابة على جميع أسئلتك المتعلقة بالجامعات السعودية."
     )
 
-
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    user_message = update.message.text.strip()
+    chat_type = update.message.chat.type
+    bot_username = context.bot.username
+
+    # في المجموعات: لا ترد إلا إذا تم مناداتك
+    if chat_type in ["group", "supergroup"]:
+        if f"@{bot_username}" not in user_message:
+            return
+        user_message = user_message.replace(f"@{bot_username}", "").strip()
+        if not user_message:
+            return
+
+    # إرسال "يكتب..." فوراً
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
 
     try:
-        response = model.generate_content(text)
+        # استدعاء Gemini بدون حظر البوت
+        response = await asyncio.to_thread(model.generate_content, user_message)
 
-        if response.text:
-            await update.message.reply_text(response.text)
+        if response.text and response.text.strip():
+            await update.message.reply_text(response.text.strip())
         else:
-            await update.message.reply_text(
-                "عذرًا، لم أتمكن من إنشاء رد."
-            )
+            await update.message.reply_text("عذرًا، لم أتمكن من إنشاء رد. حاول مرة أخرى.")
 
     except Exception as e:
-        await update.message.reply_text(
-            f"حدث خطأ:\n{str(e)}"
-        )
-
+        error_msg = str(e)
+        if "quota" in error_msg.lower() or "rate" in error_msg.lower():
+            await update.message.reply_text("عذرًا، البوت يعاني من ضغط حاليًا. حاول مرة أخرى بعد قليل.")
+        elif "safety" in error_msg.lower():
+            await update.message.reply_text("عذرًا، لا يمكنني الرد على هذا السؤال. يرجى طرح سؤال آخر.")
+        else:
+            await update.message.reply_text("عذرًا، حدث خطأ غير متوقع. يرجى المحاولة لاحقًا.")
+        print(f"Error: {error_msg}")
 
 def main():
-    app = Application.builder().token(TOKEN).build()
+    if not TOKEN or not GEMINI_API_KEY:
+        raise ValueError("❌ يجب تعيين BOT_TOKEN و GEMINI_API_KEY في متغيرات البيئة")
 
+    app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message)
-    )
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message))
 
     print("🤖 DalilSaudiBot is running...")
-
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
