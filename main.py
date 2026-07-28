@@ -1,5 +1,5 @@
 import os
-import requests
+import google.generativeai as genai
 
 from telegram import Update
 from telegram.ext import (
@@ -10,14 +10,23 @@ from telegram.ext import (
     filters,
 )
 
+# قراءة المتغيرات من Railway
 TOKEN = os.getenv("BOT_TOKEN")
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# ربط Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+
+# شخصية دليلي الجامعي
 SYSTEM_PROMPT = """
 ضع هنا البرومبت الكامل لدليلي الجامعي.
 """
 
-MODEL = "mistral-small-latest"
+# إنشاء النموذج مع الـ System Prompt
+model = genai.GenerativeModel(
+    model_name="gemini-3.6-flash",
+    system_instruction=SYSTEM_PROMPT,
+)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -28,42 +37,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text
+    text = update.message.text
 
     try:
-        response = requests.post(
-            "https://api.mistral.ai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {MISTRAL_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": MODEL,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": SYSTEM_PROMPT,
-                    },
-                    {
-                        "role": "user",
-                        "content": user_text,
-                    },
-                ],
-            },
-            timeout=60,
-        )
+        response = model.generate_content(text)
 
-        response.raise_for_status()
-
-        data = response.json()
-
-        answer = data["choices"][0]["message"]["content"]
-
-        await update.message.reply_text(answer)
+        if response.text:
+            await update.message.reply_text(response.text)
+        else:
+            await update.message.reply_text(
+                "عذرًا، لم أتمكن من إنشاء رد."
+            )
 
     except Exception as e:
         await update.message.reply_text(
-            f"حدث خطأ:\n{e}"
+            f"حدث خطأ:\n{str(e)}"
         )
 
 
