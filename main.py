@@ -1,5 +1,4 @@
 import os
-import google.generativeai as genai
 
 from telegram import Update
 from telegram.ext import (
@@ -10,23 +9,16 @@ from telegram.ext import (
     filters,
 )
 
-# قراءة المتغيرات من Railway
+from provider_manager import get_manager
+
 TOKEN = os.getenv("BOT_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# ربط Gemini
-genai.configure(api_key=GEMINI_API_KEY_4)
-
-# شخصية دليلي الجامعي
 SYSTEM_PROMPT = """
 ضع هنا البرومبت الكامل لدليلي الجامعي.
 """
 
-# إنشاء النموذج مع الـ System Prompt
-model = genai.GenerativeModel(
-    model_name="gemini-flash-lite-latest",
-    system_instruction=SYSTEM_PROMPT,
-)
+# إنشاء مدير الذكاء الاصطناعي مرة واحدة فقط
+provider = get_manager()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -37,33 +29,44 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    user_text = update.message.text
 
     try:
-        response = model.generate_content(text)
+        answer = await provider.get_response(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=user_text,
+        )
 
-        if response.text:
-            await update.message.reply_text(response.text)
-        else:
-            await update.message.reply_text(
-                "عذرًا، لم أتمكن من إنشاء رد."
-            )
+        await update.message.reply_text(answer)
 
-    except Exception as e:
+    except Exception:
         await update.message.reply_text(
-            f"حدث خطأ:\n{str(e)}"
+            "حدثت مشكلة مؤقتة في خدمة الذكاء الاصطناعي، يرجى المحاولة مرة أخرى."
         )
 
 
-def main():
-    app = Application.builder().token(TOKEN).build()
+async def on_shutdown(app: Application):
+    await provider.shutdown()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message)
+
+def main():
+    app = (
+        Application.builder()
+        .token(TOKEN)
+        .post_shutdown(on_shutdown)
+        .build()
     )
 
-    print("🤖 DalilSaudiBot is running...")
+    app.add_handler(CommandHandler("start", start))
+
+    app.add_handler(
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            reply_message,
+        )
+    )
+
+    print("🤖 DaliliSaudiBot is running...")
 
     app.run_polling()
 
