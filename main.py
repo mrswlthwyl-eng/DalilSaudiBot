@@ -11,13 +11,13 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 SYSTEM_PROMPT = """
 ضع هنا البرومبت الكامل لدليلي الجامعي.
 """
 
-MODEL = "openai/gpt-oss-20b:free"
+MODEL = "mistral-small-latest"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -32,9 +32,9 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://api.mistral.ai/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {MISTRAL_API_KEY}",
                 "Content-Type": "application/json",
             },
             json={
@@ -52,6 +52,8 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             },
             timeout=60,
         )
+
+        response.raise_for_status()
 
         data = response.json()
 
