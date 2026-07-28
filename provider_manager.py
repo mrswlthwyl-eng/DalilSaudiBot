@@ -1,7 +1,7 @@
 """
-Provider Manager v7.0 - Production Ready ✅
+Provider Manager v8.0 - Production Ready ✅
 طبقة إدارة موحدة لمزودات الذكاء الاصطناعي
-Thread-Safe | قابل للتوسع | إدارة نظيفة للموارد | Gemini عبر google-genai
+Thread-Safe | قابل للتوسع | إدارة نظيفة للموارد | دعم Conversation History
 
 التسلسل: Gemini (4 Keys) → Mistral → OpenRouter
 
@@ -13,8 +13,12 @@ Thread-Safe | قابل للتوسع | إدارة نظيفة للموارد | Gem
 الاستخدام:
     from provider_manager import get_manager
     manager = get_manager()
-    response = await manager.get_response(system_prompt, user_prompt)
-    await manager.shutdown()  # عند إيقاف التطبيق
+    response = await manager.get_response(
+        system_prompt=SYSTEM_PROMPT,
+        history=history,        # List[Dict[str, str]]
+        user_prompt=user_text,
+    )
+    await manager.shutdown()
 """
 
 from __future__ import annotations
@@ -116,6 +120,7 @@ class ContentFilteredError(PermanentProviderError):
 class RequestContext:
     system_prompt: str
     user_prompt: str
+    history: List[Dict[str, str]] = field(default_factory=list)
     request_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     start_time: float = field(default_factory=time.time)
     provider_name: str = ""
@@ -202,7 +207,6 @@ class GeminiProvider(BaseProvider):
         self._current_index = 0
         self._key_cooldowns: Dict[int, float] = {}
         self._lock = asyncio.Lock()
-        # Client مستقل لكل مفتاح (google-genai)
         self._clients: Dict[int, Any] = {}
 
     def get_key_label(self) -> str:
@@ -222,7 +226,6 @@ class GeminiProvider(BaseProvider):
         return any(i not in self._key_cooldowns for i in range(len(self._api_keys)))
 
     def _get_or_create_client(self, key_index: int) -> Any:
-        """إنشاء Client مستقل لكل مفتاح - آمن تماماً للتزامن"""
         if key_index not in self._clients:
             from google import genai
             self._clients[key_index] = genai.Client(api_key=self._api_keys[key_index])
@@ -257,12 +260,42 @@ class GeminiProvider(BaseProvider):
 
         raise last_error or ResourceExhaustedError("فشلت كل مفاتيح Gemini")
 
+    def _build_contents(self, ctx: RequestContext) -> list:
+        """بناء محتوى المحادثة مع التاريخ لـ Gemini"""
+        contents = []
+
+        for message in ctx.history:
+            role = message.get("role", "user")
+            text = message.get("content", "")
+
+            if not text:
+                continue
+
+            if role == "assistant":
+                contents.append({
+                    "role": "model",
+                    "parts": [{"text": text}],
+                })
+            else:
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": text}],
+                })
+
+        # إضافة رسالة المستخدم الحالية
+        contents.append({
+            "role": "user",
+            "parts": [{"text": ctx.user_prompt}],
+        })
+
+        return contents
+
     def _sync_call(self, key_index: int, ctx: RequestContext) -> str:
         client = self._get_or_create_client(key_index)
         try:
             response = client.models.generate_content(
                 model=self.model,
-                contents=ctx.user_prompt,
+                contents=self._build_contents(ctx),
                 config={
                     "system_instruction": ctx.system_prompt,
                     "temperature": 0.7,
@@ -330,6 +363,26 @@ class HttpProvider(BaseProvider):
                     )
         return self._client
 
+    def _build_messages(self, ctx: RequestContext) -> list:
+        """بناء رسائل المحادثة مع التاريخ لـ Mistral/OpenRouter"""
+        messages = [
+            {
+                "role": "system",
+                "content": ctx.system_prompt,
+            }
+        ]
+
+        # إضافة التاريخ
+        messages.extend(ctx.history)
+
+        # إضافة رسالة المستخدم الحالية
+        messages.append({
+            "role": "user",
+            "content": ctx.user_prompt,
+        })
+
+        return messages
+
     async def _call_api(self, ctx: RequestContext) -> str:
         import httpx
         client = await self._get_client()
@@ -338,10 +391,7 @@ class HttpProvider(BaseProvider):
                 self._base_url,
                 json={
                     "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": ctx.system_prompt},
-                        {"role": "user", "content": ctx.user_prompt},
-                    ],
+                    "messages": self._build_messages(ctx),
                     "temperature": 0.7,
                     "max_tokens": 8192,
                 },
@@ -448,9 +498,23 @@ class ProviderManager:
         self._providers.append(provider)
         self._providers.sort(key=lambda p: p.priority)
 
-    async def get_response(self, system_prompt: str, user_prompt: str) -> str:
-        ctx = RequestContext(system_prompt=system_prompt, user_prompt=user_prompt)
-        logger.info(f"[{ctx.request_id}] طلب | sys:{len(system_prompt)} user:{len(user_prompt)}")
+    async def get_response(
+        self,
+        system_prompt: str,
+        history: Optional[List[Dict[str, str]]] = None,
+        user_prompt: str = "",
+    ) -> str:
+        ctx = RequestContext(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            history=history or [],
+        )
+        logger.info(
+            f"[{ctx.request_id}] طلب | "
+            f"sys:{len(system_prompt)} "
+            f"user:{len(user_prompt)} "
+            f"history:{len(ctx.history)}"
+        )
 
         for p in self._providers:
             if isinstance(p, GeminiProvider):
