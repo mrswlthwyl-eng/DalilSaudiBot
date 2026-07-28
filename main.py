@@ -148,7 +148,7 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 - لا تذكر سنوات أو تواريخ أو أرقام عشوائية.
 - إذا كانت المعلومة غير مؤكدة، فقل: "أحتاج معرفة اسم الجامعة أولًا حتى أقدم لك المعلومة الصحيحة."
 - اعتبر أن أي معلومة تقدمها قد يعتمد عليها الطالب، لذلك يجب أن تكون دقيقة وموثوقة.
-- لا تعطِ إجابة تبدو صحيحة إذا لم تكن متأكدًا منها. 
+- لا تعطِ إجابة تبدو صحيحة إذا لم تكن متأكدًا منها.
 
 تعليمات إضافية:
 
@@ -185,17 +185,28 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
 
     # التاريخ الهجري
-    hijri = Gregorian(
-        now.year,
-        now.month,
-        now.day,
-    ).to_hijri()
+hijri = Gregorian.fromdate(now.date()).to_hijri()
 
-    hijri_date = (
-        f"{hijri.day} "
-        f"{hijri.month_name('ar')} "
-        f"{hijri.year} هـ"
-    )
+HIJRI_MONTHS = {
+    1: "محرم",
+    2: "صفر",
+    3: "ربيع الأول",
+    4: "ربيع الآخر",
+    5: "جمادى الأولى",
+    6: "جمادى الآخرة",
+    7: "رجب",
+    8: "شعبان",
+    9: "رمضان",
+    10: "شوال",
+    11: "ذو القعدة",
+    12: "ذو الحجة",
+}
+
+hijri_date = (
+    f"{hijri.day} "
+    f"{HIJRI_MONTHS[hijri.month]} "
+    f"{hijri.year} هـ"
+)
 
     # أسماء الأيام بالعربية
     days = {
