@@ -1,4 +1,7 @@
 import os
+import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import (
@@ -145,6 +148,15 @@ SYSTEM_PROMPT = """ أنت "دليلك الجامعي"، مساعد جامعي �
 - اعتبر أن أي معلومة تقدمها قد يعتمد عليها الطالب، لذلك يجب أن تكون دقيقة وموثوقة.
 - لا تعطِ إجابة تبدو صحيحة إذا لم تكن متأكدًا منها.
 
+تعليمات إضافية:
+
+- ستصلك مع كل رسالة معلومات الوقت الحالية.
+- اعتبرها المصدر الرسمي للوقت والتاريخ.
+- إذا سأل المستخدم عن الوقت أو التاريخ أو اليوم فأجب اعتمادًا عليها.
+- لا تخمن الوقت أو التاريخ.
+- لا تقل إنك لا تعرف الوقت.
+- لا تستخدم Markdown.
+- لا تستخدم ** أو __ أو # أو ``` أو *.
 """
 
 # إنشاء مدير الذكاء الاصطناعي مرة واحدة فقط
@@ -162,23 +174,59 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
 
-    # جلب سجل المحادثة السابقة فقط
+    # جلب سجل المحادثة السابقة
     history = memory.get_history(user_id)
+
+    # الوقت الحالي (السعودية)
+    now = datetime.now(ZoneInfo("Asia/Riyadh"))
+
+    days = {
+        "Monday": "الاثنين",
+        "Tuesday": "الثلاثاء",
+        "Wednesday": "الأربعاء",
+        "Thursday": "الخميس",
+        "Friday": "الجمعة",
+        "Saturday": "السبت",
+        "Sunday": "الأحد",
+    }
+
+    current_day = days.get(now.strftime("%A"), now.strftime("%A"))
+
+    current_time_context = f"""
+==============================
+معلومات الوقت الحالية
+
+التاريخ: {now.strftime("%Y-%m-%d")}
+الوقت: {now.strftime("%H:%M:%S")}
+اليوم: {current_day}
+المنطقة الزمنية: Asia/Riyadh
+
+هذه المعلومات صحيحة.
+استخدمها عند الإجابة عن أي سؤال يتعلق بالوقت أو التاريخ.
+==============================
+"""
+
+    system_prompt = SYSTEM_PROMPT + "\n\n" + current_time_context
 
     try:
         answer = await provider.get_response(
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             history=history,
             user_prompt=user_text,
         )
 
-        # حفظ المحادثة بعد الحصول على الرد
+        # إزالة أي Markdown
+        answer = re.sub(r"[*_`#]+", "", answer).strip()
+
+        # حفظ المحادثة
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
 
         await update.message.reply_text(answer)
 
-    except Exception:
+    except Exception as e:
+        print(f"AI Error: {e}")
+
         await update.message.reply_text(
             "حدثت مشكلة مؤقتة في خدمة الذكاء الاصطناعي، يرجى المحاولة مرة أخرى."
         )
