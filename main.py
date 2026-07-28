@@ -15,7 +15,7 @@ TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # ربط Gemini
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY_4)
 
 # شخصية دليلي الجامعي
 SYSTEM_PROMPT = """
