@@ -20,9 +20,19 @@ from conversation_memory import memory
 TOKEN = os.getenv("BOT_TOKEN")
 
 # ============================================================
-# إعدادات الحماية - المجموعة المسموح بها فقط
+# نظام الصلاحيات - المجموعات والحسابات المفعلة
 # ============================================================
-ALLOWED_CHAT_ID = -1004452669915  # غيّره عند الحاجة
+ALLOWED_GROUPS = {
+    -1004452669915,  # المجموعة الأولى
+    # أضف مجموعات جديدة هنا:
+    # -100xxxxxxxxxx,
+}
+
+ALLOWED_USERS = {
+    # أضف User IDs للحسابات المسموح لها بالمحادثة الخاصة:
+    # 123456789,
+    # 987654321,
+}
 
 # ============================================================
 # System Prompt
@@ -176,37 +186,60 @@ provider = get_manager()
 
 
 # ============================================================
-# دالة التحقق من الصلاحية
+# نظام التحقق من الصلاحيات
 # ============================================================
-def is_allowed_chat(update: Update) -> bool:
+def is_authorized(update: Update) -> bool:
     """
-    التحقق من أن الرسالة قادمة من المجموعة المسموح بها فقط.
-    تمنع المحادثات الخاصة والمجموعات غير المصرح بها.
+    التحقق من صلاحية المستخدم أو المجموعة.
+    - المجموعة: يتحقق من Chat ID
+    - الخاص: يتحقق من User ID
+    - القنوات والأنواع الأخرى: مرفوضة تلقائياً
     """
-    chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
 
-    # السماح فقط للمجموعة المحددة
-    if chat_id == ALLOWED_CHAT_ID:
-        return True
+    if chat_type in ("group", "supergroup"):
+        return update.effective_chat.id in ALLOWED_GROUPS
 
+    elif chat_type == "private":
+        return update.effective_user.id in ALLOWED_USERS
+
+    # القنوات وأي نوع آخر مرفوض
     return False
+
+
+def log_unauthorized(update: Update):
+    """
+    تسجيل محاولة استخدام غير مصرح بها في الكونسول.
+    يطبع جميع المعلومات اللازمة لإضافة العميل لاحقاً.
+    """
+    user = update.effective_user
+    chat = update.effective_chat
+
+    print("=" * 50)
+    print("🚫 محاولة استخدام غير مصرح بها:")
+    print(f"   Chat ID    : {chat.id}")
+    print(f"   Chat Type  : {chat.type}")
+    print(f"   User ID    : {user.id}")
+    print(f"   Username   : @{user.username}" if user.username else "   Username   : لا يوجد")
+    print(f"   Full Name  : {user.full_name}")
+    print("=" * 50)
 
 
 async def handle_unauthorized(update: Update):
     """
-    التعامل مع المحادثات غير المصرح بها.
-    ترسل رسالة مناسبة مرة واحدة لكل نوع.
+    إرسال رسالة مناسبة للمستخدم غير المصرح له.
+    - الخاص: رسالة تفيد بأن الحساب غير مفعل
+    - المجموعة: رسالة تفيد بأن المجموعة غير مفعلة
     """
     chat_type = update.effective_chat.type
 
     if chat_type == "private":
         await update.message.reply_text(
-            "هذا البوت مخصص للاستخدام داخل المجموعة الرسمية فقط."
+            "هذا الحساب غير مفعل، يرجى التواصل مع المطور لتفعيل حسابك."
         )
     else:
         await update.message.reply_text(
-            "هذه المجموعة غير مصرح لها باستخدام البوت."
+            "هذه المجموعة غير مفعلة، يرجى التواصل مع المطور لتفعيلها."
         )
 
 
@@ -214,8 +247,9 @@ async def handle_unauthorized(update: Update):
 # أوامر البوت
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # أمر start يعمل فقط في المجموعة المسموح بها
-    if not is_allowed_chat(update):
+    # التحقق من الصلاحية
+    if not is_authorized(update):
+        log_unauthorized(update)
         await handle_unauthorized(update)
         return
 
@@ -227,11 +261,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ============================================================
-    # طبقة الحماية - التحقق قبل أي معالجة
+    # طبقة الحماية - أول شيء قبل أي معالجة
     # ============================================================
-    if not is_allowed_chat(update):
+    if not is_authorized(update):
+        log_unauthorized(update)
         await handle_unauthorized(update)
-        return  # توقف كامل، لا ذاكرة، لا Gemini، لا شيء
+        return  # توقف كامل - لا ذاكرة، لا Gemini، لا شيء
 
     user_id = update.effective_user.id
     user_text = update.message.text
