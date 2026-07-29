@@ -55,6 +55,1172 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 أو
 "ما اسمك؟"
 
+
+
+شوف الان ابيك تدمج هذ كله بي كود جاهز ماابي ينقص حرف واحد ابي كل شي طيب كل شي كل شي 
+
+
+{
+  "id": "kfu",
+  "name": "جامعة الملك فيصل",
+  "short_name": "KFU",
+  "city": "الأحساء",
+  "type": "جامعة حكومية",
+  "aliases": [
+    "جامعة الملك فيصل",
+    "الملك فيصل",
+    "KFU",
+    "KFU University"
+  ],
+
+  "info": {
+    "website": "https://www.kfu.edu.sa",
+    "about": "https://www.kfu.edu.sa/ar/Pages/AboutKFU.aspx",
+    "management": "https://www.kfu.edu.sa/ar/Pages/management-page.aspx",
+    "corporate_identity": "https://www.kfu.edu.sa/ar/Pages/Corporate-identity.aspx",
+    "university_strategy": "https://www.kfu.edu.sa/ar/Pages/University-Strategy.aspx"
+  },
+
+  "electronic_services": {
+    "student_portal": "https://my.kfu.edu.sa/ar/Pages/Home.aspx",
+    "student_service_details": "https://my.kfu.edu.sa/ar/Pages/ServiceDetails.aspx?sid=48",
+    "e_services": "https://www.kfu.edu.sa/ar/pages/psmain.aspx",
+    "login": "https://www.kfu.edu.sa/ar/_layouts/15/Authenticate.aspx?Source=/ar/Pages/PSMain.aspx",
+    "services_login": "https://services.kfu.edu.sa/Services/Account/Login?ReturnUrl=%2fservices",
+    "nafath_login": "https://services.kfu.edu.sa/Services/Account/Nafath",
+    "email": "https://mail.kfu.edu.sa/",
+    "service_details_7": "https://www.kfu.edu.sa/ar/Pages/PSDetails.aspx?sid=7",
+    "service_details_49": "https://www.kfu.edu.sa/ar/pages/servicedetails.aspx?sid=49",
+    "blackboard": ""
+  },
+
+  "programs": {
+    "graduate_studies": "https://www.kfu.edu.sa/ar/Deans/HigherStudies/Pages/Postgraduate-programs.aspx",
+    "bachelor": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%A8%D9%83%D8%A7%D9%84%D9%88%D8%B1%D9%8A%D9%88%D8%B3&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%B7%D9%84%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A7%D9%86%D8%AA%D8%B8%D8%A7%D9%85",
+    "master": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D9%85%D8%A7%D8%AC%D8%B3%D8%AA%D9%8A%D8%B1&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7",
+    "phd": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D9%83%D8%AA%D9%88%D8%B1%D8%A7%D9%87&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7",
+    "diploma": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D8%A8%D9%84%D9%88%D9%85&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7#emails-sm",
+    "diploma_professional": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D8%A8%D9%84%D9%88%D9%85%20%D9%85%D8%AA%D9%88%D8%B3%D8%B7%20%D9%85%D9%87%D9%86%D9%8A&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%B7%D9%84%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A7%D9%86%D8%AA%D8%B8%D8%A7%D9%85",
+    "short_courses": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D8%AA%D8%AF%D8%B1%D9%8A%D8%A8%D9%8A&pt=%D8%A7%D9%84%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D9%8A%D8%A9%20%D9%82%D8%B5%D9%8A%D8%B1%D8%A9%20%D8%A7%D9%84%D9%85%D8%AF%D9%89"
+  },
+
+  "colleges": [
+    {"name": "كلية إدارة الأعمال", "url": "https://www.kfu.edu.sa/ar/Colleges/business-administration/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم", "url": "https://www.kfu.edu.sa/ar/Colleges/Science/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم التطبيقية", "url": "https://www.kfu.edu.sa/ar/Colleges/AppliedSciences/Pages/Home-new.aspx"},
+    {"name": "كلية الصيدلة الإكلينيكية", "url": "https://www.kfu.edu.sa/ar/Colleges/clinical_pharmacy/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم الزراعية والأغذية", "url": "https://www.kfu.edu.sa/ar/Colleges/AgricultureSciences/Pages/Home-new.aspx"},
+    {"name": "كلية الطب البيطري", "url": "https://www.kfu.edu.sa/ar/Colleges/VeterinaryMedicine/Pages/Home-new.aspx"},
+    {"name": "كلية التربية", "url": "https://www.kfu.edu.sa/ar/Colleges/Education/Pages/Home-new.aspx"},
+    {"name": "كلية علوم الحاسب وتقنية المعلومات", "url": "https://www.kfu.edu.sa/ar/Colleges/Computer_Science/Pages/Home-new.aspx"},
+    {"name": "كلية الهندسة", "url": "https://www.kfu.edu.sa/ar/Colleges/AhsaEngineering/Pages/Home-new.aspx"},
+    {"name": "كلية الحقوق", "url": "https://www.kfu.edu.sa/ar/Colleges/law/Pages/Home-new.aspx"},
+    {"name": "كلية الدراسات الإسلامية", "url": "https://www.kfu.edu.sa/ar/Colleges/IslamicStudies"},
+    {"name": "كلية الطب", "url": "https://www.kfu.edu.sa/ar/Colleges/AhsaMedicine/Pages/Home-new.aspx"},
+    {"name": "كلية طب الأسنان", "url": "https://www.kfu.edu.sa/ar/Colleges/Dentistry/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم الطبية التطبيقية", "url": "https://www.kfu.edu.sa/ar/Colleges/appliedmedical_sciences/Pages/Home-new.aspx"},
+    {"name": "مركز اللغات الأجنبية", "url": "https://www.kfu.edu.sa/ar/Colleges/arts/Pages/ForeignLanguagesCenter.aspx"}
+  ],
+
+  "deanships": [
+    {"name": "عمادة القبول والتسجيل", "url": "https://www.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/Home-new.aspx"},
+    {"name": "عمادة التعلم الإلكتروني", "url": "https://www.kfu.edu.sa/ar/Deans/E-Learning/Pages/Home-new.aspx"},
+    {"name": "عمادة البحث العلمي", "url": "https://www.kfu.edu.sa/ar/Deans/Research/Pages/Home-new.aspx"},
+    {"name": "عمادة شؤون المكتبات", "url": "https://www.kfu.edu.sa/ar/Deans/Library/Pages/Home-new.aspx"},
+    {"name": "عمادة الجودة", "url": "https://www.kfu.edu.sa/ar/Deans/QA/Pages/Home-new.aspx"},
+    {"name": "عمادة شؤون الطلاب بالأحساء", "url": "https://www.kfu.edu.sa/ar/Deans/AhsaaStudent/Pages/Home-new.aspx"},
+    {"name": "عمادة السنة التحضيرية", "url": "https://www.kfu.edu.sa/ar/Deans/PreparatoryYear/Pages/Home-new.aspx"}
+  ],
+
+  "centers": [
+    {"name": "مركز الثروة السمكية", "url": "https://www.kfu.edu.sa/ar/Centers/fish-resources/Pages/home-new.aspx"},
+    {"name": "مركز أبحاث الإبل", "url": "https://www.kfu.edu.sa/ar/Centers/Camels/Pages/Home-new.aspx"},
+    {"name": "مركز أبحاث النخيل", "url": "https://www.kfu.edu.sa/ar/Centers/palms/Pages/Home-new.aspx"},
+    {"name": "مركز دراسات المياه", "url": "https://www.kfu.edu.sa/ar/Centers/WaterStudies/Pages/home-new.aspx"},
+    {"name": "وحدة العلوم والتقنية", "url": "https://www.kfu.edu.sa/ar/Centers/science_tech_Unit/Pages/Home-new.aspx"},
+    {"name": "مركز الاستشارات القانونية", "url": "https://www.kfu.edu.sa/ar/Centers/LegalConsultations/Pages/Home.aspx"},
+    {"name": "مركز الاستشارات البحثية", "url": "https://www.kfu.edu.sa/ar/Centers/res_cons/Pages/Home-new.aspx"},
+    {"name": "مركز الابتكار", "url": "https://www.kfu.edu.sa/ar/Centers/Innovation/Pages/home.aspx"},
+    {"name": "مركز التدريب البيطري", "url": "https://www.kfu.edu.sa/ar/Centers/VetTraining/Pages/vision.aspx"},
+    {"name": "مركز علم الطيور", "url": "https://www.kfu.edu.sa/ar/Centers/Ornithology/Pages/Home-new.aspx"},
+    {"name": "مركز العمل التطوعي", "url": "https://www.kfu.edu.sa/ar/Centers/VolunteerWork/Pages/Home.aspx"},
+    {"name": "مركز الوثائق", "url": "https://www.kfu.edu.sa/ar/Centers/DocCenter/Pages/Home-new.aspx"},
+    {"name": "وحدة الإبداع", "url": "https://www.kfu.edu.sa/ar/Centers/CreativityUnit/Pages/Structural1.aspx"}
+  ],
+
+  "administrations": [
+    {"name": "وكالة شؤون الطالبات", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/Vice_President_girls_affairs/Pages/Home-new.aspx"},
+    {"name": "وكالة الشؤون الأكاديمية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/ViceAcademicAffairs/Pages/Home-new.aspx"},
+    {"name": "وكالة التطوير", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/Vice_President-development/Pages/Home-new.aspx"},
+    {"name": "وكالة المسؤولية المجتمعية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/VicePresidentacsr/Pages/Home-new.aspx"},
+    {"name": "مكتب نائب الرئيس", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/vice-president/Pages/Home-new.aspx"},
+    {"name": "قطاع الابتكار", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/InnovationSector/Pages/Home.aspx"},
+    {"name": "وحدة الموارد الذاتية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/SelfResources/Pages/Abuteunit.aspx"},
+    {"name": "وحدة التميز الطلابي", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/ViceAcademicAffairs/StudentExcellence/Pages/Home.aspx"},
+    {"name": "إدارة المنح الدراسية", "url": "https://www.kfu.edu.sa/ar/Departments/ScholarshipAdministration/Pages/Home.aspx"},
+    {"name": "إدارة الخطط الاستراتيجية", "url": "https://www.kfu.edu.sa/ar/Departments/StrategicPlans/Pages/Home.aspx"},
+    {"name": "أمانة مجلس الجامعة", "url": "https://www.kfu.edu.sa/ar/Departments/UnivCouncilSecretariat/Pages/Home.aspx"},
+    {"name": "المجلس العلمي", "url": "https://www.kfu.edu.sa/ar/Departments/Scientific-Council/Pages/Home-new.aspx"},
+    {"name": "إدارة العلاقات الصناعية", "url": "https://www.kfu.edu.sa/ar/Departments/IndustrialRelations/Pages/Description.aspx"},
+    {"name": "إدارة المرافق", "url": "https://www.kfu.edu.sa/ar/Departments/Facilities/Pages/Home.aspx"},
+    {"name": "إدارة الأمن والسلامة", "url": "https://www.kfu.edu.sa/ar/Departments/Security_safety/Pages/Home-new.aspx"},
+    {"name": "إدارة الاتصالات المؤسسية", "url": "https://www.kfu.edu.sa/ar/Departments/DCC/Pages/Home.aspx"},
+    {"name": "إدارة الاستثمار", "url": "https://www.kfu.edu.sa/ar/Departments/Investment/Pages/Home.aspx"},
+    {"name": "إدارة تبادل المعرفة", "url": "https://www.kfu.edu.sa/ar/Departments/knowledgeExchange/Pages/Home-new.aspx"},
+    {"name": "إدارة الصحافة", "url": "https://www.kfu.edu.sa/ar/Departments/press/Pages/Home-new.aspx"},
+    {"name": "إدارة مراقبة المخزون", "url": "https://www.kfu.edu.sa/ar/Departments/Inventory-Control/Pages/Home-new.aspx"},
+    {"name": "إدارة الأمن السيبراني", "url": "https://www.kfu.edu.sa/ar/Departments/CyberSecurity/Pages/Home.aspx"},
+    {"name": "إدارة النقل", "url": "https://www.kfu.edu.sa/ar/Departments/TransportService/Pages/Home-new.aspx"},
+    {"name": "وحدة المؤتمرات", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/VicePresidentacsr/VicePresidency/ConferenceUnit/Pages/home-new.aspx"},
+    {"name": "إدارة الإسكان", "url": "https://www.kfu.edu.sa/ar/Departments/Housing-Department/Pages/Home.aspx"},
+    {"name": "إدارة التخطيط", "url": "https://www.kfu.edu.sa/ar/Departments/planning/Pages/Home-new.aspx"},
+    {"name": "إدارة الشراكة المجتمعية", "url": "https://www.kfu.edu.sa/ar/Departments/CommunityPartnership_Dev/Pages/Home-new.aspx"},
+    {"name": "إدارة المستلزمات الطبية", "url": "https://www.kfu.edu.sa/ar/Departments/MedicalSupply/Pages/Home.aspx"},
+    {"name": "إدارة الخدمات الطبية", "url": "https://www.kfu.edu.sa/ar/Departments/Medical_Srvices/Pages/Home-new.aspx"},
+    {"name": "إدارة الشؤون المالية", "url": "https://www.kfu.edu.sa/ar/Departments/financial-Affairs/Pages/Home-new.aspx"},
+    {"name": "إدارة الشؤون القانونية", "url": "https://www.kfu.edu.sa/ar/Departments/Legal/Pages/Home-new.aspx"},
+    {"name": "إدارة المشاريع والخدمات العامة", "url": "https://www.kfu.edu.sa/ar/Departments/projects-publicservices/Pages/Home-new.aspx"}
+  ],
+
+  "admission": {
+    "main": "https://www.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/Home-new.aspx",
+    "preparatory_year": "https://www.kfu.edu.sa/ar/deans/preparatoryyear/pages/freshstudentsgate.aspx"
+  },
+
+  "calendar": {
+    "academic_calendar": "https://mportal.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/academiScedule1.aspx",
+    "interactive_calendar": "https://www.kfu.edu.sa/ar/deans/e-learning/pages/interactive_calender.aspx"
+  },
+
+  "policies": {
+    "it_faq": "https://www.kfu.edu.sa/ar/Deans/it/Pages/FAQ.aspx",
+    "it_faq_pdf": "https://www.kfu.edu.sa/ar/Deans/it/Documents/Questions.pdf",
+    "privacy_policy": "https://www.kfu.edu.sa/ar/Deans/it/Documents/Privacy_policy.pdf",
+    "safe_use_policy": "https://www.kfu.edu.sa/ar/Documents/Safe-Use-Policy.pdf",
+    "cybersecurity_policy": "https://services.kfu.edu.sa/Services/Content/CyberSecurityLegislationControls.pdf"
+  },
+
+  "external_links": {
+    "ministry_of_education": "https://www.moe.gov.sa/",
+    "eastern_province_emirate": "https://www.moi.gov.sa/wps/portal/Home/emirates/easternprovince"
+  },
+
+  "contact": {
+    "phone": "920002366",
+    "email": "info@kfu.edu.sa",
+    "city": "الأحساء"
+  },
+
+  "social": {
+    "x": "https://x.com/abdalah_hr",
+    "youtube": "",
+    "instagram": "",
+    "linkedin": "https://www.linkedin.com/in/abdalahsalman",
+    "telegram": "https://t.me/Trainingale",
+    "whatsapp_channel": "https://whatsapp.com/channel/0029VaDBxEb1CYoUvMsM4W14"
+  },
+
+  "telegram": {
+    "channels": [
+      {
+        "name": "التدريب التطبيقي - جامعة الملك فيصل",
+        "username": "Trainingale",
+        "url": "https://t.me/Trainingale",
+        "type": "official",
+        "category": "training",
+        "description": "القناة الرسمية لوحدة التدريب التطبيقي - المصدر الأساسي لنماذج وتعليمات التدريب",
+        "subscribers": ""
+      },
+      {
+        "name": "التدريب التطبيقي (قناة ثانية)",
+        "username": "training1a1",
+        "url": "https://t.me/training1a1",
+        "type": "official",
+        "category": "training",
+        "description": "قناة تدريب تطبيقي - محتوى مشابه للقناة الأساسية",
+        "subscribers": ""
+      },
+      {
+        "name": "القناة الاخبارية لجامعة الملك فيصل",
+        "username": "arareee12",
+        "url": "https://t.me/arareee12",
+        "type": "unofficial",
+        "category": "news",
+        "description": "نشر الأخبار والتحديثات الجامعية",
+        "subscribers": "4,378"
+      },
+      {
+        "name": "التدريب التعاوني",
+        "username": "Coop_Training2025",
+        "url": "https://t.me/Coop_Training2025",
+        "type": "unofficial",
+        "category": "training",
+        "description": "كتابة التقارير وإعداد مشاريع التخرج البرمجية - خبرة في التقارير والمشاريع",
+        "subscribers": "416"
+      },
+      {
+        "name": "قناة إدارة الأعمال KFU",
+        "username": "BA_KFU",
+        "url": "https://t.me/BA_KFU",
+        "type": "unofficial",
+        "category": "academic",
+        "description": "خدمة طلاب وطالبات تخصص إدارة الأعمال - قناة تطوعية",
+        "subscribers": "7,109"
+      },
+      {
+        "name": "وظائف قانونية Legal jobs",
+        "username": "jobs_law",
+        "url": "https://t.me/jobs_law",
+        "type": "external",
+        "category": "jobs",
+        "description": "نشر الوظائف القانونية وإعلانات المكاتب",
+        "subscribers": "30,708"
+      },
+      {
+        "name": "SAL / فرص تدريب تعاوني",
+        "username": "SALTRAI",
+        "url": "https://t.me/SALTRAI",
+        "type": "external",
+        "category": "training",
+        "description": "مساعدة طلاب كلية الحاسب في فترة التدريب التعاوني - استشارات",
+        "subscribers": "21,943"
+      },
+      {
+        "name": "وظائف هندسية و فنية",
+        "username": "Engineers_Jobs",
+        "url": "https://t.me/Engineers_Jobs",
+        "type": "external",
+        "category": "jobs",
+        "description": "طرح الوظائف الهندسية والفنية - إعلانات مجانية",
+        "subscribers": "56,617"
+      },
+      {
+        "name": "وظائف اسأل بنات الرياض",
+        "username": "askgirlsriyadh",
+        "url": "https://t.me/askgirlsriyadh",
+        "type": "external",
+        "category": "jobs",
+        "description": "نشر الوظائف والدورات والإعلانات التي تهم البنات - تغطية معارض",
+        "subscribers": "23,085"
+      },
+      {
+        "name": "أي وظيفة",
+        "username": "ewdifh",
+        "url": "https://t.me/ewdifh",
+        "type": "external",
+        "category": "jobs",
+        "description": "وظائف مدنية عسكرية شركات - نتائج قبول - مواعيد جامعات - دورات تدريبية",
+        "subscribers": ""
+      },
+      {
+        "name": "تطوير الذات النفسية والاجتماعية",
+        "username": "doratalthat_alnfsia",
+        "url": "https://t.me/doratalthat_alnfsia",
+        "type": "external",
+        "category": "development",
+        "description": "دورات وكتب مفيدة لتطوير الذات والمهارات - دورات نفسية واجتماعية",
+        "subscribers": "2,003"
+      },
+      {
+        "name": "عبدالله سلمان - موارد بشرية",
+        "username": "abdalah_hr",
+        "url": "https://t.me/abdalah_hr",
+        "type": "external",
+        "category": "jobs",
+        "description": "قناة موارد بشرية وتوظيف",
+        "subscribers": ""
+      },
+      {
+        "name": "قروب جامعة الملك فيصل - المستجدين",
+        "username": "KFU_P1",
+        "url": "https://t.me/KFU_P1",
+        "type": "group",
+        "category": "students",
+        "description": "قروب المستجدين المعتمد - دبلوم عن بعد",
+        "subscribers": "58,525"
+      },
+      {
+        "name": "قناة الدبلومات جامعة الملك فيصل",
+        "username": "dblomaaladara",
+        "url": "https://t.me/dblomaaladara",
+        "type": "group",
+        "category": "diploma",
+        "description": "توفير معلومات واستفسارات الدبلوم",
+        "subscribers": ""
+      },
+      {
+        "name": "استفسارات دبلومات جامعة الملك فيصل",
+        "username": "kingfaisaldeploma",
+        "url": "https://t.me/kingfaisaldeploma",
+        "type": "group",
+        "category": "diploma",
+        "description": "مناقشات واستفسارات الطلاب - قروب عام",
+        "subscribers": ""
+      },
+      {
+        "name": "دبلوم جامعة الملك فيصل عن بعد",
+        "username": "kfuFasalbbfjfkfn",
+        "url": "https://t.me/kfuFasalbbfjfkfn",
+        "type": "group",
+        "category": "diploma",
+        "description": "قروب عام استفسارات لجميع تخصصات الدبلوم عن بعد",
+        "subscribers": "11,838"
+      }
+    ],
+
+    "posts": [
+      {
+        "channel": "Trainingale",
+        "id": "456",
+        "url": "https://t.me/Trainingale/456",
+        "title": "إعلان تدريب تطبيقي",
+        "type": "announcement",
+        "tags": ["تدريب تطبيقي", "إعلان", "تعميم"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "455",
+        "url": "https://t.me/Trainingale/455",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "training1a1",
+        "id": "193",
+        "url": "https://t.me/training1a1/193",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "453",
+        "url": "https://t.me/Trainingale/453",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "452",
+        "url": "https://t.me/Trainingale/452",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "451",
+        "url": "https://t.me/Trainingale/451",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "450",
+        "url": "https://t.me/Trainingale/450",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "449",
+        "url": "https://t.me/Trainingale/449",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "448",
+        "url": "https://t.me/Trainingale/448",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "447",
+        "url": "https://t.me/Trainingale/447",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "445",
+        "url": "https://t.me/Trainingale/445",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "443",
+        "url": "https://t.me/Trainingale/443?single",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247361",
+        "url": "https://t.me/kingfaisaldeploma/247361",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247328",
+        "url": "https://t.me/kingfaisaldeploma/247328",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247019",
+        "url": "https://t.me/kingfaisaldeploma/247019",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "dblomaaladara",
+        "id": "5018",
+        "url": "https://t.me/dblomaaladara/5018",
+        "title": "منشور دبلوم",
+        "type": "post",
+        "tags": ["دبلوم"]
+      },
+      {
+        "channel": "arareee12",
+        "id": "17166",
+        "url": "https://t.me/arareee12/17166",
+        "title": "خبر جامعي",
+        "type": "news",
+        "tags": ["أخبار", "جامعة"]
+      },
+      {
+        "channel": "arareee12",
+        "id": "17759",
+        "url": "https://t.me/arareee12/17759",
+        "title": "خبر جامعي",
+        "type": "news",
+        "tags": ["أخبار", "جامعة"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "444",
+        "url": "https://t.me/Coop_Training2025/444",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "513",
+        "url": "https://t.me/Coop_Training2025/513",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "510",
+        "url": "https://t.me/Coop_Training2025/510",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      }
+    ]
+  },
+
+  "keywords": {
+    "calendar": ["التقويم", "الفصل الدراسي", "بداية الدراسة", "الاختبارات", "الإجازات", "التقويم التفاعلي"],
+    "admission": ["القبول", "التسجيل", "شروط القبول", "التحويل", "مستجد", "سنة تحضيرية"],
+    "faculty": ["أعضاء هيئة التدريس", "الدكاترة", "الأساتذة"],
+    "services": ["الخدمات الإلكترونية", "البريد الجامعي", "النظام الأكاديمي", "خدماتي", "تسجيل دخول", "إيميل", "نفاذ"],
+    "graduate_studies": ["دراسات عليا", "ماجستير", "دكتوراه", "برامج عليا", "دبلوم", "دبلوم متوسط", "برامج قصيرة"],
+    "colleges": ["كلية إدارة أعمال", "كلية علوم", "كلية علوم تطبيقية", "كلية صيدلة", "كلية زراعة", "كلية طب بيطري", "كلية تربية", "كلية حاسب", "كلية هندسة", "كلية حقوق", "كلية دراسات إسلامية", "كلية طب", "كلية طب أسنان", "كلية علوم طبية تطبيقية", "علوم حاسب"],
+    "scholarships": ["منح", "منحة دراسية", "ابتعاث"],
+    "e_learning": ["تعلم إلكتروني", "تعليم عن بعد", "بلاك بورد"],
+    "research": ["بحث علمي", "أبحاث", "استشارات بحثية", "ابتكار"],
+    "centers": ["مركز أبحاث الإبل", "مركز أبحاث النخيل", "مركز دراسات المياه", "تطوع", "مركز وثائق"],
+    "library": ["مكتبة", "عمادة المكتبات"],
+    "external": ["وزارة التعليم", "إمارة الشرقية"],
+    "training": ["تدريب تطبيقي", "تدريب تعاوني", "وحدة التدريب", "نموذج تقرير", "تقرير مرحلي", "تقرير نهائي", "تقرير تدريب", "فرص تدريب", "كتابة تقارير", "مشاريع تخرج"],
+    "diploma": ["دبلوم عن بعد", "استفسارات دبلوم", "قروب دبلوم", "دبلومات"],
+    "news": ["أخبار الجامعة", "القناة الاخبارية", "مستجدات"],
+    "jobs": ["وظائف", "توظيف", "وظائف قانونية", "وظائف هندسية", "فرص عمل"],
+    "whatsapp": ["واتساب", "قناة واتساب"]
+  }
+}
+
+
+
+{
+  "kfu_training_knowledge": {
+    "description": "قاعدة معرفة كاملة للتدريب التطبيقي والتعاوني في جامعة الملك فيصل - نظام الدبلوم عن بعد",
+
+    "level4_overview": {
+      "title": "المستوى الرابع (التطبيق) - الفصل الأول لعام 1448هـ",
+      "subjects": {
+        "subject1": {
+          "name": "الشهادة المهنية 1",
+          "hours": "4 ساعات",
+          "fee": "650 ريال",
+          "content": "محاضرات مباشرة ومسجلة + واجبات ومناقشات + اختبار نهائي",
+          "note": "تختلف مواد الشهادة المهنية حسب التخصص (يوجد 14 تخصص) - ماعدا تخصصي إدارة أعمال وإدارة عامة نفس المنهج"
+        },
+        "subject2": {
+          "name": "الشهادة المهنية 2",
+          "hours": "4 ساعات",
+          "fee": "650 ريال",
+          "content": "محاضرات مباشرة ومسجلة + واجبات ومناقشات + اختبار نهائي",
+          "note": "تختلف مواد الشهادة المهنية حسب التخصص"
+        },
+        "subject3": {
+          "name": "التدريب التطبيقي",
+          "hours": "4 ساعات",
+          "fee": "600 ريال",
+          "content": "3 محاضرات مسجلة + 3 محاضرات مباشرة فقط - بدون أعمال فصلية - تطبيق في أي منشأة",
+          "grading": "تقرير مرحلي + تقرير نهائي + تقييم المشرف",
+          "note": "مواد المستوى الرابع كامل لا تدخل في المعدل - فقط شرط اجتياز"
+        }
+      }
+    },
+
+    "training_duration": {
+      "title": "مدة التدريب التطبيقي",
+      "total_months": "6 أشهر",
+      "total_weeks": "24 أسبوع",
+      "weeks_per_month": "4 أسابيع شهرياً",
+      "total_days": "120 يوم تدريبي",
+      "days_per_week": "5 أيام أسبوعياً",
+      "total_hours": "720 ساعة تدريبية",
+      "hours_per_day": "6 ساعات يومياً",
+      "start": "تبدأ من تاريخ مباشرة التدريب"
+    },
+
+    "training_search_guide": {
+      "title": "بخصوص التدريب وكيفية البحث",
+      "employed": "الموظف: عادي تقدر تطبق بدوامك - تقدر تعطيهم خبر من الآن إذا يقبلون تدريبك - انتظر الخطاب ينزل وأعطهم إياه",
+      "unemployed": "اللي مو موظف أو دوامه ما يقبل تدريبه: ابحث عن جهات تقبل تدريب - ما يفرق خاص أو حكومي كلها تمشي - الجامعة خلت المجال مفتوح لكم بحرية اختيار التدريب بأي جهة تدريبية",
+      "allowed_organizations": [
+        "الشركات والمؤسسات",
+        "البنوك والمصارف",
+        "المستشفيات والمراكز الصحية",
+        "الجمعيات الخيرية",
+        "الوزارات والبلديات"
+      ],
+      "important": "مهم جداً أن يكون لدى جهة التدريب ختم رسمي معتمد"
+    },
+
+    "forms": {
+      "form1_direct_start": {
+        "name": "نموذج مباشرة التدريب",
+        "icon": "متوفر في حساب كل طالب مسجل في المقرر",
+        "steps": [
+          "طباعة نموذج مباشرة التدريب من النظام",
+          "تسليمه إلى مشرف جهة التدريب لتعبئته واعتماده وختمه",
+          "إعادة رفع النموذج بعد اعتماده عبر خانة رفع تقرير نموذج المباشرة في النظام"
+        ],
+        "filling_methods": [
+          "تعبئة النموذج يدوياً ثم تصويره وتحويله إلى PDF ورفعه في النظام",
+          "تعبئته إلكترونياً من قبل جهة التدريب ثم تحويله إلى PDF ورفعه في النظام"
+        ],
+        "requirement": "يشترط رفع النموذج مكتمل البيانات ومعتمداً من جهة التدريب خلال الفترة المحددة"
+      },
+
+      "form2_declaration": {
+        "name": "إقرار التدريب التطبيقي",
+        "description": "تعهد من الطالب بالالتزام بإتمام فترة التدريب التطبيقي وفق الأنظمة والتعليمات المعتمدة",
+        "steps": [
+          "تعبئة الاسم الكامل والرقم الجامعي من قبل الطالب",
+          "التوقيع من الطالب (يدوياً أو إلكترونياً)",
+          "الإقرار خاص بالطالب فقط",
+          "رفع الإقرار بشكل مستقل عبر أيقونة الإقرار المخصصة له في النظام"
+        ]
+      },
+
+      "form3_trainee_letter": {
+        "name": "طلب قبول متدرب (الخطاب)",
+        "description": "خطاب خاص بكل طالب باسمه ورقمه الجامعي وتخصصه",
+        "steps": [
+          "طباعة الخطاب عند استلامه",
+          "تقديمه لجهة التدريب لتعبئة البيانات المطلوبة مع التوقيع والختم"
+        ],
+        "required_data": [
+          "اسم جهة التدريب",
+          "اسم مسؤولك في جهة التدريب",
+          "البريد الإلكتروني للمنشأة",
+          "رقم تواصل الجهة",
+          "الختم والتوقيع"
+        ],
+        "final_step": "دمج الخطاب مع نموذج المباشرة في ملف واحد PDF ورفعه في أيقونة المباشرة"
+      },
+
+      "form4_organization": {
+        "name": "نموذج جهة التدريب",
+        "status": "إجباري - لا يمكن رفع التقرير المرحلي إلا بعد تعبئته",
+        "required_data": [
+          "اسم جهة التدريب (الفرع، القسم)",
+          "عنوان جهة التدريب (المدينة، الحي)",
+          "السجل التجاري لجهة التدريب",
+          "رابط مقر الجهة",
+          "الموقع الإلكتروني",
+          "اسم المشرف",
+          "رقم الهاتف الثابت",
+          "رقم الجوال",
+          "البريد الإلكتروني"
+        ],
+        "method": "تعبئة إلكترونياً عبر: أيقونة مشاريع التخرج والتدريب > اختيار نموذج جهة التدريب > إدخال البيانات > حفظ"
+      },
+
+      "form5_progress_report": {
+        "name": "نموذج التقرير المرحلي",
+        "timing": "بعد 3 شهور - في الأسبوع 12 من التدريب",
+        "pages": {
+          "min": "12 صفحة (3000 كلمة)",
+          "max": "15 صفحة (4000 كلمة)"
+        },
+        "questions": {
+          "q1": "تعريف جهة التدريب: نبذة تعريفية + طبيعة العمل داخل الجهة بشكل عام + نبذة تعريفية عن القسم وطبيعة العمل فيه (300 كلمة)",
+          "q2": "المهام المنفذة (300 كلمة)",
+          "q3": "المصاعب (300 كلمة)",
+          "q4": "المهام المطلوبة الفترة القادمة (300 كلمة)",
+          "q5": "المبادرة - حسب طلب المشرف الأكاديمي (300 كلمة)"
+        },
+        "components": [
+          "صفحة الغلاف",
+          "صفحة المحتويات",
+          "مصادر المعلومات",
+          "ختم وتوقيع جهة التدريب"
+        ],
+        "note": "كل إجابة لا تقل عن 300 كلمة - مع التقيد بتعليمات نوع وحجم الخط حسب الدليل التنفيذي"
+      },
+
+      "form6_final_report": {
+        "name": "نموذج التقرير النهائي",
+        "timing": "بعد 6 شهور - في الأسبوع 24 من التدريب",
+        "structure": {
+          "cover": "عنوان جهة التدريب + اسم الطالب + تاريخ التدريب",
+          "acknowledgment": "شكر وتقدير للدكاترة والإشراف",
+          "table_of_contents": "جدول المحتويات",
+          "introduction": "المقدمة",
+          "organization_overview": "لمحة عن جهة التدريب (الرؤية، الأهداف، طبيعة العمل)",
+          "tasks": "المهام والمسؤوليات (الخطة الزمنية، نوع التدريب، الأعمال المنجزة، تفصيل المهام)",
+          "experience": "التجربة التدريبية (الخبرات، أثر التدريب، الصعوبات والتحديات)",
+          "analysis": "تحليل الجوانب التدريبية وعلاقتها بالتخصص",
+          "initiative": "وصف أثر المبادرة في تطوير جهة التدريب",
+          "references": "المراجع والملاحق (نماذج وتقارير داعمة)"
+        },
+        "requirement": "يتم رفعه بعد الختم والتوقيع من جهة التدريب"
+      },
+
+      "form7_evaluation": {
+        "name": "نموذج تقييم جهة التدريب",
+        "timing": "بعد 6 شهور - في الأسبوع 24 من التدريب",
+        "description": "يغطي التقييم فترة التدريب كاملة من تاريخ المباشرة إلى نهاية التدريب",
+        "pages": {
+          "page1": "البيانات - تختم وتوقع من قبل المشرف الميداني",
+          "page2_3": "نقاط التقييم من المشرف في الخانة رقم 5 بعلامة ✅ أو وضع رقم 🔢",
+          "page4": "جدول نموذج الحضور والانصراف (ملتزم أو غير ملتزم) تعبئة بعلامة ✅ + ختم المشرف الميداني وتوقيعه"
+        }
+      },
+
+      "form8_attendance": {
+        "name": "نموذج الحضور والانصراف",
+        "description": "نموذج إضافي متوفر في القناة"
+      }
+    },
+
+    "executive_guide": {
+      "name": "الدليل التنفيذي للفصل الدراسي الثاني 1447هـ",
+      "description": "مرجع رسمي يوضح كافة التعليمات والمتطلبات الأكاديمية والميدانية للتدريب",
+      "contents": [
+        "مواعيد رفع كل النماذج",
+        "شرح كتابة التقارير",
+        "شروط كتابة التقارير",
+        "توزيع درجات التدريب التطبيقي"
+      ],
+      "note": "مهم جداً قراءته من بداية الترم لفهم التقارير المطلوبة ومواعيد رفعها"
+    },
+
+    "training_timeline": {
+      "title": "مراحل دراسة وعمل التدريب التطبيقي - كل الخطوات",
+      "phase1": {
+        "name": "الخطوات الأولى للتدريب",
+        "items": [
+          "نموذج مباشرة التدريب",
+          "إقرار التدريب التطبيقي",
+          "خطاب التدريب",
+          "نموذج جهة التدريب"
+        ]
+      },
+      "phase2": {
+        "name": "بعد 3 شهور - الأسبوع 12",
+        "items": ["رفع التقرير المرحلي"]
+      },
+      "phase3": {
+        "name": "بعد 6 شهور - الأسبوع 24",
+        "items": [
+          "رفع التقرير النهائي",
+          "رفع تقييم جهة التدريب"
+        ]
+      }
+    },
+
+    "faq": {
+      "q1": {
+        "question": "هل تعبئة النماذج على الكمبيوتر أم يدوي بالقلم؟",
+        "answer": "عادي كله مقبول - كمبيوتر أو يدوي"
+      },
+      "q2": {
+        "question": "كتابة التقارير المرحلي والنهائي على كمبيوتر أم بخط اليد؟",
+        "answer": "التقارير سواء المرحلي أو النهائي يتم كتابتها على الكمبيوتر فقط"
+      },
+      "q3": {
+        "question": "ماذا لو قفلت أيقونة رفع النماذج والطالب ما رفع النماذج؟",
+        "answer": "عادي يقدر يرفعها مع التقرير المرحلي"
+      },
+      "q4": {
+        "question": "متى يتم رفع التقرير المرحلي؟",
+        "answer": "بعد 3 شهور في الأسبوع 12 من التدريب"
+      },
+      "q5": {
+        "question": "متى يتم رفع التقرير النهائي وتقييم جهة التدريب؟",
+        "answer": "بعد 6 شهور في الأسبوع 24 من التدريب"
+      },
+      "q6": {
+        "question": "هل مواد المستوى الرابع تدخل في المعدل؟",
+        "answer": "لا - مواد المستوى الرابع كامل لا تدخل في المعدل - فقط شرط اجتياز"
+      },
+      "q7": {
+        "question": "ما هي مدة التدريب التطبيقي بالتفصيل؟",
+        "answer": "6 أشهر - 24 أسبوع - 4 أسابيع شهرياً - 120 يوم تدريبي - 5 أيام أسبوعياً - 720 ساعة تدريبية - 6 ساعات يومياً"
+      },
+      "q8": {
+        "question": "أين أجد نماذج التدريب التطبيقي؟",
+        "answer": "جميع النماذج متوفرة في قناة التدريب التطبيقي: https://t.me/Trainingale"
+      },
+      "q9": {
+        "question": "ما هي طريقة كتابة التقرير المرحلي؟",
+        "answer": "5 أسئلة، كل إجابة لا تقل عن 300 كلمة - الحد الأدنى 12 صفحة (3000 كلمة) والحد الأعلى 15 صفحة (4000 كلمة) - مع صفحة غلاف ومحتويات ومصادر - يختم ويوقع من جهة التدريب"
+      },
+      "q10": {
+        "question": "ما هي مكونات التقرير النهائي؟",
+        "answer": "غلاف + شكر وتقدير + جدول محتويات + مقدمة + لمحة عن جهة التدريب + المهام والمسؤوليات + التجربة التدريبية + تحليل الجوانب التدريبية + أثر المبادرة + المراجع والملاحق"
+      }
+    },
+
+    "keywords": {
+      "training_basics": ["تدريب تطبيقي", "تدريب تعاوني", "المستوى الرابع", "تطبيق", "مباشرة تدريب"],
+      "forms": ["نموذج مباشرة", "إقرار تدريب", "خطاب تدريب", "نموذج جهة التدريب", "نموذج تقييم", "نموذج حضور وانصراف"],
+      "reports": ["تقرير مرحلي", "تقرير نهائي", "كتابة تقرير", "طريقة التقرير", "شكل التقرير"],
+      "timing": ["متى ارفع", "موعد الرفع", "الأسبوع 12", "الأسبوع 24", "مواعيد التدريب"],
+      "duration": ["مدة التدريب", "كم شهر", "كم ساعة", "عدد الأيام", "720 ساعة", "6 أشهر"],
+      "organizations": ["جهة التدريب", "جهات مسموحة", "ختم رسمي", "مكان التدريب", "وين اتدرب"],
+      "subjects": ["الشهادة المهنية", "رسوم المادة", "كم رسوم", "650 ريال", "600 ريال"],
+      "guide": ["الدليل التنفيذي", "توزيع الدرجات", "شروط التدريب"],
+      "faq_keywords": ["سؤال شائع", "كيف اكتب", "وش المطلوب", "متى اسلم", "نماذج", "طريقة الرفع"]
+    }
+  }
+}
+
+
+
+
+{
+  "kfu_external_opportunities": {
+    "certificates_platforms": [
+      {
+        "name": "معهد التطوير الكلي للتدريب",
+        "description": "يوجد شهادات مدعومة من هدف",
+        "url": "https://mdit.edu.sa/ar/category/%D8%A7%D9%84%D8%B4%D9%87%D8%A7%D8%AF%D8%A7%D8%AA-%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D8%B1%D8%A7%D9%81%D9%8A%D9%87"
+      },
+      {
+        "name": "طموحنا - جامعة الأميرة نورة",
+        "description": "للشهادات الاحترافية التابعة لجامعة الاميرة نوره بنت عبدالرحمن فيه شهادات مدعومة من هدف",
+        "url": "https://tamohuna-pnu.com/courses/professional"
+      },
+      {
+        "name": "متقن - جامعة بيشة",
+        "description": "للشهادات الاحترافية التابعة لجامعة بيشة أيضا فيها شهادات مدعومة من هدف",
+        "url": "https://mutqen.ub.edu.sa/courses/professional"
+      },
+      {
+        "name": "مبدع - جامعة الملك عبدالعزيز",
+        "description": "للشهادات الاحترافية التابع لجامعة الملك عبدالعزيز",
+        "url": "https://www.mubdiecertificates-kau.com/courses/professional"
+      },
+      {
+        "name": "إثراء - جامعة الملك سعود",
+        "description": "للشهادات الاحترافية التابع لجامعة سعود",
+        "url": "https://fy.ksu.edu.sa/EthraTraining/"
+      }
+    ],
+
+    "courses": [
+      {
+        "title": "دورة Power BI لتصور البيانات وإعداد لوحات المعلومات",
+        "description": "فرصة لتطوير مهاراتكم في تحليل البيانات وتعلّم إعداد تقارير ولوحات معلومات احترافية بمهارة مطلوبة في سوق العمل",
+        "date": "8 – 11 فبراير 2026",
+        "time": "5:00 – 8:00 مساءً",
+        "note": "الدورة مسجلة لك مدى الحياة",
+        "certificate": "شهادة معتمدة – 32 ساعة تدريبية",
+        "discount": "خصم 50٪ لفترة محدودة (استخدم كود ACQU يصير ب 99 ريال فقط)",
+        "url": "https://t.me/Training_ACQU1/217"
+      }
+    ],
+
+    "training_opportunities": [
+      {
+        "company": "شركة Innovative Solutions SA",
+        "location": "الرياض",
+        "description": "واحدة من أبرز الشركات السعودية المتخصصة في تقديم حلول الأمن السيبراني والخدمات الرقمية في منطقة الخليج",
+        "fields": ["الحاسب", "الأمن السيبراني"],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة Business Umbrella",
+        "location": "الرياض",
+        "position": "Graphic Design Intern",
+        "fields": ["التصميم الجرافيكي", "الفنون البصرية", "أو تخصصات ذات صلة"],
+        "requirements": [
+          "الإلمام بأدوات وبرامج التصميم مثل Adobe Creative Suite (Illustrator, Photoshop وغيرها)",
+          "دقة عالية وحس جمالي",
+          "القدرة على العمل ضمن فريق والالتزام بالمواعيد",
+          "طالب أو خريج حديث في التخصصات ذات العلاقة",
+          "خبرة سابقة في مشاريع تصميم أو تدريب (ميزة إضافية)"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "location": "الرياض",
+        "fields": ["صحافة", "تسويق", "تصميم جرافيك"],
+        "requirements": [
+          "أن يكون التدريب التعاوني ضمن متطلبات التخرج",
+          "الالتزام بالعمل 5 أيام في الأسبوع",
+          "مدة التدريب لا تقل عن 3 أشهر",
+          "8 ساعات عمل يوميًا",
+          "الجدية والانضباط في العمل"
+        ],
+        "benefits": [
+          "تطبيق عملي للمعرفة الأكاديمية",
+          "تطوير المهارات المهنية والتقنية",
+          "شهادة تدريب بعد الانتهاء"
+        ],
+        "contact": "modhymasoud@gmail.com",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة تعميد (Tameed)",
+        "location": "الرياض",
+        "position": "Credit Risk Intern",
+        "fields": ["المالية", "الاستثمار", "أو تخصصات ذات صلة"],
+        "requirements": [
+          "خلفية تعليمية في المالية أو الاستثمار أو ما يعادلها",
+          "معدل تراكمي لا يقل عن 3.5 من 5 أو 2.5 من 4",
+          "إجادة اللغة الإنجليزية",
+          "المرونة وتحمل المسؤولية",
+          "الإلمام باستخدام Google Workspace"
+        ],
+        "benefits": ["مكافأة شهرية"],
+        "deadline": "15/02/2026",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة PepsiCo",
+        "location": ["الرياض", "جدة", "الدمام", "الأحساء"],
+        "fields": ["التسويق", "الموارد البشرية", "المالية", "الهندسة الميكانيكية", "الهندسة الكهربائية", "الهندسة الصناعية", "سلاسل الإمداد", "الصحة والسلامة", "الكيمياء"],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة تلبينة للرعاية الطبية",
+        "location": "القصيم-بريدة",
+        "fields": ["الإدارة المكتبية", "التخصصات الإدارية ذات الصلة"],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "الكلية التطبيقية",
+        "title": "مبادرة جاهز لسوق العمل",
+        "topics": [
+          "مهارات التواصل الفعّال في بيئة العمل",
+          "مبادئ العلاقات العامّة",
+          "فن كتابة السيرة الذّاتيّة ومحاكاة لمقابلات العمل",
+          "أخلاقيّات المهنة في المؤسّسات",
+          "دعم الفرص الوظيفيّة من خلال الشهادات الاحترافيّة",
+          "أساسيّات خدمة العملاء"
+        ],
+        "start_date": "8 فبراير 2026",
+        "time": "6 مساءً",
+        "certificate": "معتمدة من جامعة الحدود الشماليّة",
+        "notes": [
+          "سيتم التواصل مع المقبولين وإرسال رابط المحاضرات على الإيميل فقط",
+          "وللحصول على الشهادة يشترط حضور 70% من إجمالي المحاضرات التدريبيّة"
+        ],
+        "url": "https://forms.gle/pKnPdZkM2pXGBPKcA"
+      },
+      {
+        "company": "شركة رائدة في مجال التقنية والتعليم",
+        "description": "تبحث عن متدربين في مجالات مختلفة",
+        "benefits": [
+          "مكافاة شهرية",
+          "عمل مرن",
+          "بيئة عمل محفزة",
+          "فرصة مثالية لمن يرغب في تطوير مهاراته واكتساب خبرة عملية",
+          "شهادة خبرة",
+          "مقابلات فورية"
+        ],
+        "location": "المقابلات عن بعد",
+        "note": "التدريب لطلاب الجامعة او المتخرجين",
+        "contact": "talent@elham.sa",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "location": "الرياض",
+        "fields": ["تسويق", "اداره اعمال", "مصمين جرافيك", "علاقات عامة", "تقنية معلومات IT"],
+        "type": "تدريب تعاوني للترم الصيفي",
+        "url": "https://docs.google.com/forms/d/e/1FAIpQLSdtU33H9y7mWwK31_9SiKV2Z0fddXnPtoctdMv2mdryslSyIA/viewform?usp=publish-editor"
+      },
+      {
+        "company": "شركة الشلهوب",
+        "location": ["الرياض", "جدة"],
+        "fields": ["إدارة الأعمال", "التسويق", "الموارد البشرية", "سلاسل الإمداد", "تقنية المعلومات", "أو تخصصات إدارية وتجارية ذات صلة"],
+        "requirements": [
+          "طالب/ـة في السنة الأخيرة ومتطلب تدريب للتخرج",
+          "إجادة اللغة الإنجليزية (متوسط إلى متقدم)",
+          "معرفة أساسية ببرنامج Excel"
+        ],
+        "benefits": [
+          "بيئة عمل احترافية في قطاع الرفاهية",
+          "فرص تعلم وتطوير وظيفي",
+          "التعرض لمجالات متعددة داخل المجموعة"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "جمعية القصيم التقنية وشركائها",
+        "location": "مدينة بريدة",
+        "period": "مسائية",
+        "duration": "6 أشهر",
+        "application_period": "من يوم الثلاثاء 10 / 2 / 2026م حتى يوم الخميس 12 / 2 / 2026م",
+        "fields": [
+          "الجرافيكس والوسائط المتعددة",
+          "الأمن السيبراني",
+          "التسويق الرقمي",
+          "تصميم وتحليل النظم",
+          "الدعم الفني",
+          "خدمة العملاء",
+          "أنظمة المؤسسة وإدارة البيانات",
+          "تصميم صفحات الويب وتجربة المستخدم",
+          "إدارة وتنظيم الفعاليات"
+        ],
+        "acceptance_process": [
+          "سيتم إجراء المفاضلة بين المتقدمين وفق الآلية المعتمدة في الكلية",
+          "القبول النهائي يتم بعد اجتياز المقابلة الشخصية من قبل جهة التدريب",
+          "سيتم إشعار المقبولين بموعد ومكان وآلية المقابلة لاحقًا"
+        ],
+        "url": "https://forms.office.com/r/4WDCw8mU1y",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "جهة حكومية",
+        "location": "الرياض",
+        "position": "Technical Support Co-op Trainee",
+        "fields": ["تقنية المعلومات", "علوم الحاسب", "هندسة الحاسب", "التخصصات ذات العلاقة"],
+        "requirements": [
+          "أن يكون المتقدم ملتحقًا بدرجة البكالوريوس في أحد التخصصات المذكورة",
+          "مؤهل للتدريب التعاوني من الجامعة",
+          "معرفة أساسية بأجهزة الحاسب وأنظمة التشغيل وتطبيقات Microsoft Office",
+          "مهارات تواصل وحل مشكلات قوية"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة شراء الطاقة السعودية (SPPC)",
+        "location": "الرياض",
+        "program": "Future Power – Engineering COOP Training Program",
+        "fields": ["الهندسة"],
+        "requirements": [
+          "طالب بكالوريوس في السنة الأكاديمية الأخيرة",
+          "معدل تراكمي لا يقل عن 2.5/4.0 أو 3.5/5.0",
+          "إجادة اللغتين العربية والإنجليزية",
+          "خطاب تدريب تعاوني معتمد وساري من جهة تعليمية معتمدة",
+          "القدرة على استخدام تطبيقات Microsoft Office",
+          "مهارات تواصل جيدة"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "الأولى للطيران (Aloula Aviation)",
+        "location": "الدمام",
+        "note": "تتبع ارامكو السعودية",
+        "duration": "من 6 إلى 8 أسابيع",
+        "requirements": ["طلاب درجة البكالوريوس", "أن يكون التدريب العملي متطلبًا جامعيًا قبل التخرج"],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "الشركة السعودية لشراء الطاقة (SPPC)",
+        "location": "الرياض",
+        "program": "Future Power – Business Administration COOP Training Program",
+        "fields": ["إدارة الأعمال (الموارد البشرية)", "إدارة الأعمال (المشتريات)", "تخصصات ذات علاقة"],
+        "requirements": [
+          "طالب بكالوريوس في السنة الأكاديمية الأخيرة",
+          "معدل تراكمي لا يقل عن 2.5/4.0 أو 3.5/5.0",
+          "إجادة اللغتين العربية والإنجليزية",
+          "خطاب تدريب تعاوني معتمد وساري من جهة تعليمية معتمدة",
+          "القدرة على استخدام تطبيقات Microsoft Office",
+          "مهارات تواصل جيدة"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "Aon",
+        "location": "الرياض",
+        "position": "Co-op Graphic Designer Trainee",
+        "fields": ["التصميم الجرافيكي", "تخصصات ذات علاقة"],
+        "requirements": [
+          "الالتحاق حاليًا ببرنامج دراسات عليا/بكالوريوس في التصميم الجرافيكي أو تخصص قريب",
+          "إتقان أدوات Adobe Creative Cloud (Photoshop, Illustrator, InDesign)",
+          "وجود ملف أعمال (Portfolio) يبرز مهارات التصميم والإبداع",
+          "خبرة سابقة (مشاريع أكاديمية و/أو تدريب) في التصميم الرقمي والمطبوع",
+          "دقة عالية والالتزام بإرشادات الهوية البصرية",
+          "مهارات تواصل وتعاون فعّالة",
+          "إجادة متقدمة للغة الإنجليزية"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "أرسيلور ميتال للمنتجات الأنبوبية",
+        "location": "الجبيل",
+        "program": "القبول الصيفي – يونيو 2026",
+        "fields": ["الموارد البشرية", "إدارة سلاسل الإمداد", "اللوجستيات"],
+        "requirements": [
+          "سعودي الجنسية",
+          "طالب بكالوريوس منتظم في التخصص المطلوب",
+          "أن يكون التدريب التعاوني متطلب تخرج من الجامعة",
+          "إجادة اللغة الإنجليزية (تحدثًا وكتابة)",
+          "مهارات تواصل جيدة وروح المبادرة",
+          "مستوى أكاديمي جيد (مُفضل)"
+        ],
+        "documents": ["سيرة ذاتية محدثة", "خطاب تدريب تعاوني من الجامعة", "السجل الأكاديمي"],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "المدينة الطبية بجامعة القصيم",
+        "program": "التدريب الصيفي",
+        "duration": "6 اسابيع",
+        "registration": "2026-05-13 إلى 2026-05-21",
+        "requirements": [
+          "أن يكون المتقدم سعوديـ/ـة الجنسية",
+          "أن يكون المتقدم من التخصصات الصحية قد انهى السنة الثالثة",
+          "أن يكون المتقدم من التخصصات غير الصحية قد انهى السنة الثالثة",
+          "أن لايقل المعدل التراكمي عن (3.25-5)",
+          "إجادة اللغة الإنجليزية"
+        ],
+        "documents": [
+          "خطاب من الكلية بالموافقة على التدريب",
+          "نموذج الكشف الطبي",
+          "صورة من سجل الطالب الاكاديمي",
+          "شهادة إنعاش القلب الرئوي الاساسي BLS",
+          "شهادة BICSL لطلاب التخصصات الصحية"
+        ],
+        "benefits": ["شهادة إتمام التدريب الصيفي"]
+      },
+      {
+        "company": "شركة الحسن غازي إبراهيم شاكر",
+        "location": "الرياض",
+        "program": "Engineering Cooperative Training Program – HVAC CO-OP",
+        "fields": ["الهندسة الميكانيكية", "الهندسة الكهربائية", "تخصصات هندسية ذات علاقة"],
+        "requirements": [
+          "طالب في السنة الأخيرة",
+          "معدل لا يقل عن 2.5/4.0 أو 3.5/5.0",
+          "أن يكون التدريب التعاوني ضمن متطلبات التخرج",
+          "إجادة اللغة الإنجليزية (متوسطة إلى متقدمة)",
+          "مهارات تواصل وتفاعل قوية",
+          "سعودي الجنسية"
+        ],
+        "duration": "6 أشهر",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "مجمع وادي جدة للابتكار",
+        "fields": ["التسويق", "ذكاء اصطناعي", "مالية", "علاقات رواد الأعمال"],
+        "type": "تدريب تعاوني وصيفي"
+      },
+      {
+        "company": "شركة Dive Marketing",
+        "location": "شمال الرياض",
+        "fields": ["التسويق", "وسائط متعددة (جرافيك ديزاين)"],
+        "requirements": [
+          "أن يكون المتدرب/ـة في مرحلة التدريب التعاوني وفق متطلبات الجامعة",
+          "الالتزام بفترة التدريب المحددة من الجامعة"
+        ],
+        "contact": "HR@dives.sa",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "الهيئة السعودية للمياه",
+        "description": "لطلاب وطالبات الجامعات - دبلوم وبكالوريوس",
+        "fields": [
+          "الذكاء الاصطناعي والبيانات",
+          "تقنية المعلومات والتحول الرقمي والأمن السيبراني",
+          "إدارة رأس المال البشري",
+          "الأنظمة والتشريعات",
+          "التواصل والتسويق",
+          "الأبحاث والإبتكار",
+          "إدارة المشاريع",
+          "الاستراتيجية والتخطيط",
+          "الإدارة المالية",
+          "سلاسل الإمداد",
+          "التصميم الإبداعي",
+          "الإستدامة والبيئة",
+          "تحلية المياه"
+        ],
+        "locations": [
+          "الرياض - المركز الرئيسي", "الجبيل - أكاديمية المياه", "الجبيل - معهد أبحاث وتيرا",
+          "منظومة انتاج الجبيل", "منظومة انتاج الخبر", "منظومة انتاج رأس الخير",
+          "فرع الهيئة بمنطقة مكة المكرمة", "فرع الهيئة بمنطقة المدينة المنورة",
+          "فرع الهيئة بمنطقة عسير", "فرع الهيئة في منطقة جازان", "منظومة انتاج جدة",
+          "منظومة انتاج الشعيبة", "منظومة انتاج ينبع", "منظومة انتاج الشقيق",
+          "منظومة انتاج الليث", "منظومة انتاج القنفذة", "منظومة انتاج فرسان"
+        ],
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "ولاء للتأمين",
+        "description": "لطلاب وطالبات بكالوريوس ودبلوم",
+        "application_duration": "10 أيام من تاريخ الإعلان",
+        "contact": "coop@walaa.com",
+        "training_period": "يونيو حتى يوليو 2026",
+        "duration": "لا تقل عن 12 أسبوعًا حسب متطلبات جهة التعليم",
+        "type": "تدريب تعاوني"
+      },
+      {
+        "company": "شركة مصفاة أرامكو السعودية موبيل (سامرف)",
+        "location": "ينبع الصناعية",
+        "program": "التدريب التعاوني لعام 2026م",
+        "fields": [
+          "إدارة الأعمال", "إدارة سلاسل الإمداد", "إدارة المرافق", "الموارد البشرية",
+          "المحاسبة", "الآلات", "نظم المعلومات الإدارية", "الكيمياء", "علوم الحاسب",
+          "الكيمياء التحليلية", "هندسة الأجهزة", "الهندسة الكهربائية", "الهندسة الكيميائية",
+          "هندسة السلامة", "هندسة الحاسب", "هندسة النظم والتحكم", "الهندسة الميكانيكية"
+        ],
+        "requirements": [
+          "أن يكون المتقدم سعودي الجنسية",
+          "أن يكون في آخر سنة دراسية أو قد أكمل 6 فصول دراسية",
+          "لحاملي الدبلوم: أن لا يقل المعدل عن (2.5 من 4) أو (3.1 من 
+
+
+
+
 أجب فقط:
 
 "أنا دليلك الجامعي، كيف أقدر أساعدك؟"
