@@ -1,25 +1,26 @@
 """
-Knowledge Manager v6.0 - Final Production Ready Search Engine
-=============================================================
-Fixed: keyword section bonus, redundant scoring removed,
-       alias cleaning in query, optimized keyword processing.
+Knowledge Manager v6.1 - Production Ready with Intent Detection
+================================================================
+Added: greeting detection, empty query guard, intent-based section
+filtering, intent-specific bonuses, raised MIN_SCORE, root result
+demotion.
 """
 
 import json
 import re
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Set
 
 
 class KnowledgeManager:
     """
     Central knowledge engine for the bot.
     Loads all university JSON files from /knowledge into memory,
-    and provides smart, scored deep search capabilities.
+    and provides smart, scored deep search with intent detection.
     """
 
-    MIN_SCORE = 10
+    MIN_SCORE = 25  # Raised from 10 to filter weak matches
     MAX_RESULTS = 20
     MAX_CACHE_SIZE = 1000
     DEBUG = False
@@ -58,11 +59,63 @@ class KnowledgeManager:
         "remote_jobs": 2,
     }
 
+    # Intent keywords → target sections + bonus
+    INTENT_MAP = {
+        "كلية": (["colleges"], 50),
+        "كليات": (["colleges"], 50),
+        "عمادة": (["deanships"], 50),
+        "عمادات": (["deanships"], 50),
+        "مركز": (["centers"], 40),
+        "مراكز": (["centers"], 40),
+        "برنامج": (["programs"], 40),
+        "برامج": (["programs"], 40),
+        "خدمة": (["electronic_services"], 40),
+        "خدمات": (["electronic_services"], 40),
+        "تقويم": (["calendar"], 40),
+        "قبول": (["admission"], 40),
+        "تسجيل": (["admission"], 40),
+        "تدريب": (["telegram", "training_opportunities"], 35),
+        "وظيفة": (["training_opportunities", "remote_jobs"], 35),
+        "وظائف": (["training_opportunities", "remote_jobs"], 35),
+        "قناة": (["telegram"], 35),
+        "قنوات": (["telegram"], 35),
+        "تلجرام": (["telegram"], 35),
+        "تيليجرام": (["telegram"], 35),
+        "هاتف": (["contact"], 40),
+        "رقم": (["contact"], 35),
+        "بريد": (["contact", "electronic_services"], 35),
+        "إيميل": (["contact", "electronic_services"], 35),
+        "ايميل": (["contact", "electronic_services"], 35),
+        "منحة": (["scholarships"], 40),
+        "منح": (["scholarships"], 40),
+        "مكتبة": (["library"], 40),
+        "بلاك": (["electronic_services"], 40),
+        "blackboard": (["electronic_services"], 40),
+        "دبلوم": (["programs", "diploma"], 40),
+        "ماجستير": (["programs"], 40),
+        "دكتوراه": (["programs"], 40),
+        "بكالوريوس": (["programs"], 40),
+        "سياسة": (["policies"], 35),
+        "سياسات": (["policies"], 35),
+        "تقرير": (["telegram"], 30),
+        "تقارير": (["telegram"], 30),
+        "نموذج": (["telegram"], 30),
+        "نماذج": (["telegram"], 30),
+    }
+
+    # Greetings that should NOT trigger search
+    GREETINGS = {
+        "السلام عليكم", "وعليكم السلام", "سلام", "هلا", "اهلا", "مرحبا",
+        "صباح الخير", "صباح النور", "مساء الخير", "مساء النور",
+        "ياهلا", "يا هلا", "حياك", "حياكم", "الله حي", "هلا بك",
+        "hello", "hi", "hey",
+    }
+
     def __init__(self, knowledge_dir: str = "knowledge"):
         self.knowledge_dir = Path(knowledge_dir)
         self._cache: Dict[str, dict] = {}
         self._aliases_map: Dict[str, str] = {}
-        self._item_aliases: Dict[str, set] = {}  # university_id -> set of item aliases
+        self._item_aliases: Dict[str, set] = {}
         self._search_cache: OrderedDict = OrderedDict()
         self._loaded = False
 
@@ -82,6 +135,20 @@ class KnowledgeManager:
         text = text.lower()
         text = re.sub(r'\s+', ' ', text).strip()
         return text
+
+    # ============================================================
+    # Greeting Detection
+    # ============================================================
+
+    def is_greeting(self, text: str) -> bool:
+        """Check if the user message is just a greeting."""
+        normalized = self.normalize(text)
+        words = set(normalized.split())
+        for greeting in self.GREETINGS:
+            greeting_norm = self.normalize(greeting)
+            if greeting_norm in normalized or all(w in words for w in greeting_norm.split()):
+                return True
+        return False
 
     # ============================================================
     # Loading & Caching
@@ -122,7 +189,6 @@ class KnowledgeManager:
                 self._aliases_map[self.normalize(data.get("name", ""))] = university_id
                 self._aliases_map[self.normalize(data.get("short_name", ""))] = university_id
 
-                # Collect all item-level aliases for query cleaning
                 self._collect_item_aliases(university_id, data)
 
             except json.JSONDecodeError as e:
@@ -135,10 +201,8 @@ class KnowledgeManager:
               f"with {len(self._aliases_map)} aliases.")
 
     def _collect_item_aliases(self, university_id: str, data: Any) -> None:
-        """Collect all aliases from items (colleges, deanships, etc.) for query cleaning."""
         if university_id not in self._item_aliases:
             self._item_aliases[university_id] = set()
-
         if isinstance(data, dict):
             if "aliases" in data and isinstance(data["aliases"], list):
                 for alias in data["aliases"]:
@@ -178,19 +242,31 @@ class KnowledgeManager:
         return self._cache.get(university_id)
 
     # ============================================================
+    # Intent Detection
+    # ============================================================
+
+    def _detect_intent(self, query_words: List[str]) -> Tuple[Optional[List[str]], int]:
+        """
+        Detect user intent from query words.
+        Returns (target_sections, bonus) or (None, 0).
+        """
+        for word in query_words:
+            if word in self.INTENT_MAP:
+                return self.INTENT_MAP[word]
+        return None, 0
+
+    # ============================================================
     # Query Cleaning
     # ============================================================
 
     def _clean_query(self, user_text: str, university_id: str) -> List[str]:
         query = self.normalize(user_text)
 
-        # Remove university aliases
         for alias in sorted(self._aliases_map, key=len, reverse=True):
             if alias and alias in query:
                 query = query.replace(alias, "")
                 break
 
-        # Remove item-level aliases (college names, etc.)
         if university_id in self._item_aliases:
             for alias in sorted(self._item_aliases[university_id], key=len, reverse=True):
                 if alias and alias in query:
@@ -210,7 +286,7 @@ class KnowledgeManager:
             if len(w.strip()) > 1 and w.strip() not in stop_words
         ]
 
-        return words if words else [query.strip()]
+        return words if words else []
 
     # ============================================================
     # Content Item Detection
@@ -218,6 +294,18 @@ class KnowledgeManager:
 
     def _is_content_item(self, item: dict) -> bool:
         return bool(set(item.keys()) & self.CONTENT_KEYS)
+
+    # ============================================================
+    # Root Detection
+    # ============================================================
+
+    def _is_root_info(self, item: dict) -> bool:
+        """
+        Check if this is the root university info (website, about, etc.)
+        rather than a specific content item like a college or service.
+        """
+        info_keys = {"website", "about", "management", "corporate_identity"}
+        return bool(set(item.keys()) & info_keys)
 
     # ============================================================
     # Match Scoring
@@ -251,9 +339,7 @@ class KnowledgeManager:
         for key, value in item.items():
             if key in ("id", "score", "_"):
                 continue
-
             weight = self.FIELD_WEIGHTS.get(key, 1)
-
             if isinstance(value, str):
                 score += self._score_match(query_words, value) * weight
             elif isinstance(value, list):
@@ -298,9 +384,13 @@ class KnowledgeManager:
     # ============================================================
 
     def search(self, user_text: str) -> dict:
-        """Main search with per-university query caching."""
+        """Main search with greeting check, intent detection, and root demotion."""
         if not self._loaded:
             return {"found": False}
+
+        # ✅ Check greetings first
+        if self.is_greeting(user_text):
+            return {"found": False, "is_greeting": True}
 
         university_id = self.find_university(user_text)
         if not university_id and len(self._cache) == 1:
@@ -321,12 +411,39 @@ class KnowledgeManager:
 
         query_words = self._clean_query(user_text, university_id)
 
+        # ✅ Guard against empty query after cleaning
+        if not query_words or all(len(w) < 2 for w in query_words):
+            result = {"found": False}
+            self._set_cache(ck, result)
+            return result
+
+        # ✅ Detect intent
+        target_sections, intent_bonus = self._detect_intent(query_words)
+
         if self.DEBUG:
             print(f"🔍 Query: {user_text}")
             print(f"   Words: {query_words}")
+            if target_sections:
+                print(f"   Intent: {target_sections} (+{intent_bonus})")
 
         all_results: List[Tuple[int, dict]] = []
-        self._deep_search_scored(query_words, university_data, "", all_results, set())
+        scored_ids: Set[int] = set()
+
+        if target_sections:
+            # Search only in targeted sections
+            for section_key in target_sections:
+                if section_key in university_data:
+                    section_data = university_data[section_key]
+                    self._deep_search_scored(
+                        query_words, section_data, section_key, all_results, scored_ids
+                    )
+            # Add intent bonus to all results
+            all_results = [(s + intent_bonus, r) for s, r in all_results]
+        else:
+            # Search everything
+            self._deep_search_scored(
+                query_words, university_data, "", all_results, scored_ids
+            )
 
         if not all_results:
             result = {"found": False}
@@ -340,6 +457,9 @@ class KnowledgeManager:
             key = (result.get("section", ""), result.get("title", ""), result.get("url", ""))
             if key not in seen:
                 seen.add(key)
+                # ✅ Demote root info (website, about, etc.)
+                if self._is_root_info(result):
+                    score = max(score - 30, 0)
                 unique_results.append((score, result))
 
         all_results = unique_results
@@ -368,16 +488,11 @@ class KnowledgeManager:
         data: Any,
         path: str,
         results: List[Tuple[int, dict]],
-        scored_ids: set,
+        scored_ids: Set[int],
     ) -> None:
-        """
-        Recursively search all data.
-        scored_ids prevents scoring the same item twice (via keywords vs recursion).
-        """
         if isinstance(data, dict):
             item_id = id(data)
 
-            # Score content items (once only)
             if self._is_content_item(data) and item_id not in scored_ids:
                 scored_ids.add(item_id)
                 score = self._score_dict(query_words, data)
@@ -387,13 +502,11 @@ class KnowledgeManager:
                     result = self._item_to_result(path, data)
                     results.append((score, result))
 
-            # Keywords: process once, add section bonus to results
             kw_data = data.get("keywords")
             if kw_data and item_id not in scored_ids:
                 scored_ids.add(item_id)
                 self._process_keywords(query_words, kw_data, data, results, scored_ids)
 
-            # Recurse
             for key, value in data.items():
                 if key in ("id",):
                     continue
@@ -416,12 +529,8 @@ class KnowledgeManager:
         kw_data: Any,
         parent_data: dict,
         results: List[Tuple[int, dict]],
-        scored_ids: set,
+        scored_ids: Set[int],
     ) -> None:
-        """
-        Process keywords in both dict and list formats.
-        Adds SECTION_TYPE_BONUS to results.
-        """
         if isinstance(kw_data, dict):
             for kw_key, kw_list in kw_data.items():
                 if isinstance(kw_list, list):
@@ -430,8 +539,7 @@ class KnowledgeManager:
                             self._score_related_sections(
                                 query_words, parent_data, results, scored_ids
                             )
-                            break  # One match per keyword group is enough
-
+                            break
         elif isinstance(kw_data, list):
             for kw in kw_data:
                 if self._score_match(query_words, kw) > 5:
@@ -445,9 +553,8 @@ class KnowledgeManager:
         query_words: List[str],
         parent_data: dict,
         results: List[Tuple[int, dict]],
-        scored_ids: set,
+        scored_ids: Set[int],
     ) -> None:
-        """Score items in all related sections with section bonus."""
         skip_keys = {"id", "aliases", "keywords", "name", "short_name", "city", "type"}
         for section_key, section_value in parent_data.items():
             if section_key in skip_keys:
@@ -458,7 +565,7 @@ class KnowledgeManager:
                         scored_ids.add(id(item))
                         s = self._score_dict(query_words, item)
                         if s > 0:
-                            s += self._get_section_bonus(section_key)  # ✅ Fixed
+                            s += self._get_section_bonus(section_key)
                             r = self._item_to_result(section_key, item)
                             results.append((s, r))
 
