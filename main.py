@@ -16,7 +16,7 @@ from telegram.ext import (
 
 from provider_manager import get_manager
 from conversation_memory import memory
-from knowledge_manager import get_knowledge_manager  # ← Knowledge Base
+from knowledge_manager import get_knowledge_manager
 
 TOKEN = os.getenv("BOT_TOKEN")
 
@@ -24,16 +24,11 @@ TOKEN = os.getenv("BOT_TOKEN")
 # نظام الصلاحيات - المجموعات والحسابات المفعلة
 # ============================================================
 ALLOWED_GROUPS = {
-    -1004452669915,  # المجموعة الأولى
-    # أضف مجموعات جديدة هنا:
-    # -100xxxxxxxxxx,
+    -1004452669915,
 }
 
 ALLOWED_USERS = {
-    2076364383,  # الحساب الشخصي
-    # أضف User IDs للحسابات المسموح لها بالمحادثة الخاصة:
-    # 123456789,
-    # 987654321,
+    2076364383,
 }
 
 # ============================================================
@@ -186,9 +181,7 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 # إنشاء مدير الذكاء الاصطناعي مرة واحدة فقط
 provider = get_manager()
 
-# ============================================================
 # Initialize Knowledge Manager (Singleton)
-# ============================================================
 knowledge = get_knowledge_manager("knowledge")
 
 
@@ -210,7 +203,6 @@ def is_authorized(update: Update) -> bool:
     elif chat_type == "private":
         return update.effective_user.id in ALLOWED_USERS
 
-    # القنوات وأي نوع آخر مرفوض
     return False
 
 
@@ -254,7 +246,6 @@ async def handle_unauthorized(update: Update):
 # أوامر البوت
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # التحقق من الصلاحية
     if not is_authorized(update):
         log_unauthorized(update)
         await handle_unauthorized(update)
@@ -267,24 +258,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ============================================================
-    # طبقة الحماية - أول شيء قبل أي معالجة
-    # ============================================================
     if not is_authorized(update):
         log_unauthorized(update)
         await handle_unauthorized(update)
-        return  # توقف كامل - لا ذاكرة، لا Gemini، لا شيء
+        return
 
     user_id = update.effective_user.id
     user_text = update.message.text
 
     # ============================================================
-    # Knowledge Base Search - before calling Gemini
+    # Knowledge Base Search
     # ============================================================
     kb_result = knowledge.search(user_text)
 
     if kb_result.get("found"):
-        # Build answer from knowledge base
         answer_parts = []
 
         if kb_result.get("title"):
@@ -298,24 +285,19 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         answer = "\n\n".join(answer_parts)
 
-        # Save conversation
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
 
         await update.message.reply_text(answer)
-        return  # Done — no need to call Gemini
+        return
 
     # ============================================================
-    # Fallback to Gemini if knowledge base didn't find an answer
+    # Gemini Fallback
     # ============================================================
-
-    # سجل المحادثة
     history = memory.get_history(user_id)
 
-    # الوقت الحالي (السعودية)
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
 
-    # التاريخ الهجري - متوافق مع جميع إصدارات hijridate
     try:
         hijri = Hijri.today()
         hijri_day = hijri.day
@@ -326,7 +308,6 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         hijri_month = 1
         hijri_year = 1446
 
-    # أسماء الأشهر الهجرية العربية
     HIJRI_MONTHS = {
         1: "محرم",
         2: "صفر",
@@ -345,7 +326,6 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hijri_month_name = HIJRI_MONTHS.get(hijri_month, "محرم")
     hijri_date = f"{hijri_day} {hijri_month_name} {hijri_year} هـ"
 
-    # أسماء الأيام بالعربية
     days = {
         "Monday": "الاثنين",
         "Tuesday": "الثلاثاء",
@@ -356,10 +336,7 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Sunday": "الأحد",
     }
 
-    current_day = days.get(
-        now.strftime("%A"),
-        now.strftime("%A")
-    )
+    current_day = days.get(now.strftime("%A"), now.strftime("%A"))
 
     current_time_context = f"""
 ==============================
@@ -385,11 +362,7 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ==============================
 """
 
-    system_prompt = (
-        SYSTEM_PROMPT
-        + "\n\n"
-        + current_time_context
-    )
+    system_prompt = SYSTEM_PROMPT + "\n\n" + current_time_context
 
     try:
         answer = await provider.get_response(
@@ -398,25 +371,15 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_prompt=user_text,
         )
 
-        # إزالة Markdown
         answer = re.sub(r"[*_`#]+", "", answer).strip()
 
-        # حفظ المحادثة
-        memory.add_user_message(
-            user_id,
-            user_text,
-        )
-
-        memory.add_assistant_message(
-            user_id,
-            answer,
-        )
+        memory.add_user_message(user_id, user_text)
+        memory.add_assistant_message(user_id, answer)
 
         await update.message.reply_text(answer)
 
     except Exception as e:
         print(f"AI Error: {e}")
-
         await update.message.reply_text(
             "حدثت مشكلة مؤقتة في خدمة الذكاء الاصطناعي، يرجى المحاولة مرة أخرى."
         )
@@ -434,22 +397,12 @@ def main():
         .build()
     )
 
+    app.add_handler(CommandHandler("start", start))
     app.add_handler(
-        CommandHandler(
-            "start",
-            start,
-        )
-    )
-
-    app.add_handler(
-        MessageHandler(
-            filters.TEXT & ~filters.COMMAND,
-            reply_message,
-        )
+        MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message)
     )
 
     print("🤖 DaliliSaudiBot is running...")
-
     app.run_polling()
 
 
