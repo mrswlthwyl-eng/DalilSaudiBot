@@ -1,51 +1,93 @@
 """
-Knowledge Manager - Knowledge Base Engine
-==========================================
-Responsible for loading, caching, and searching university knowledge bases.
-Acts as the brain for DalilSaudiBot's static knowledge queries.
-
-Supports:
-    - Dynamic loading of all JSON files in /knowledge
-    - Smart search by aliases, sections, and keywords
-    - Partial word matching for better accuracy
-    - Fully extensible — no code changes needed for new universities or sections
+Knowledge Manager v6.0 - Final Production Ready Search Engine
+=============================================================
+Fixed: keyword section bonus, redundant scoring removed,
+       alias cleaning in query, optimized keyword processing.
 """
 
 import json
-import os
+import re
+from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 
 
 class KnowledgeManager:
     """
     Central knowledge engine for the bot.
     Loads all university JSON files from /knowledge into memory,
-    and provides smart search capabilities.
+    and provides smart, scored deep search capabilities.
     """
 
-    def __init__(self, knowledge_dir: str = "knowledge"):
-        """
-        Initialize the Knowledge Manager.
+    MIN_SCORE = 10
+    MAX_RESULTS = 20
+    MAX_CACHE_SIZE = 1000
+    DEBUG = False
 
-        Args:
-            knowledge_dir: Relative path to the folder containing JSON files.
-        """
+    FIELD_WEIGHTS = {
+        "name": 5, "title": 5, "question": 5, "answer": 5,
+        "keywords": 4, "tags": 4, "aliases": 2,
+        "category": 3, "type": 3, "position": 3, "company": 3,
+        "description": 2, "username": 2, "channel": 2,
+        "phone": 2, "email": 2,
+        "url": 1,
+    }
+
+    CONTENT_KEYS = {
+        "url", "name", "title", "description", "tags",
+        "category", "type", "username", "channel", "company",
+        "position", "phone", "email", "question", "answer",
+        "keywords", "aliases",
+    }
+
+    SECTION_TYPE_BONUS = {
+        "colleges": 20,
+        "deanships": 15,
+        "programs": 12,
+        "electronic_services": 10,
+        "admission": 10,
+        "calendar": 10,
+        "contact": 8,
+        "centers": 5,
+        "administrations": 5,
+        "telegram": 3,
+        "news": 2,
+        "posts": 2,
+        "channels": 2,
+        "training_opportunities": 2,
+        "remote_jobs": 2,
+    }
+
+    def __init__(self, knowledge_dir: str = "knowledge"):
         self.knowledge_dir = Path(knowledge_dir)
-        self._cache: Dict[str, dict] = {}  # university_id → data
-        self._aliases_map: Dict[str, str] = {}  # alias → university_id
+        self._cache: Dict[str, dict] = {}
+        self._aliases_map: Dict[str, str] = {}
+        self._item_aliases: Dict[str, set] = {}  # university_id -> set of item aliases
+        self._search_cache: OrderedDict = OrderedDict()
         self._loaded = False
+
+    # ============================================================
+    # Text Normalization
+    # ============================================================
+
+    @staticmethod
+    def normalize(text: str) -> str:
+        if not text:
+            return ""
+        text = re.sub(r'[\u064B-\u065F\u0670]', '', text)
+        text = text.replace('أ', 'ا').replace('إ', 'ا').replace('آ', 'ا')
+        text = text.replace('ى', 'ي')
+        text = text.replace('ة', 'ه')
+        text = re.sub(r'[؟?،,.:;()\[\]{}/\\\-_«»""'']', ' ', text)
+        text = text.lower()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
 
     # ============================================================
     # Loading & Caching
     # ============================================================
 
     def load_database(self) -> None:
-        """
-        Load all JSON files from the knowledge directory into memory.
-        Builds an alias map for fast university lookup.
-        Called once at bot startup.
-        """
         if not self.knowledge_dir.exists():
             raise FileNotFoundError(
                 f"Knowledge directory not found: {self.knowledge_dir.resolve()}"
@@ -53,6 +95,8 @@ class KnowledgeManager:
 
         self._cache.clear()
         self._aliases_map.clear()
+        self._item_aliases.clear()
+        self._search_cache.clear()
 
         json_files = list(self.knowledge_dir.glob("*.json"))
         if not json_files:
@@ -72,13 +116,14 @@ class KnowledgeManager:
 
                 self._cache[university_id] = data
 
-                # Map all aliases → university_id
                 for alias in data.get("aliases", []):
-                    self._aliases_map[alias.lower()] = university_id
+                    self._aliases_map[self.normalize(alias)] = university_id
 
-                # Also map the full name and short name
-                self._aliases_map[data.get("name", "").lower()] = university_id
-                self._aliases_map[data.get("short_name", "").lower()] = university_id
+                self._aliases_map[self.normalize(data.get("name", ""))] = university_id
+                self._aliases_map[self.normalize(data.get("short_name", ""))] = university_id
+
+                # Collect all item-level aliases for query cleaning
+                self._collect_item_aliases(university_id, data)
 
             except json.JSONDecodeError as e:
                 print(f"⚠️  Skipping {file_path.name}: invalid JSON — {e}")
@@ -89,21 +134,31 @@ class KnowledgeManager:
         print(f"✅ Knowledge Manager loaded {len(self._cache)} universities "
               f"with {len(self._aliases_map)} aliases.")
 
+    def _collect_item_aliases(self, university_id: str, data: Any) -> None:
+        """Collect all aliases from items (colleges, deanships, etc.) for query cleaning."""
+        if university_id not in self._item_aliases:
+            self._item_aliases[university_id] = set()
+
+        if isinstance(data, dict):
+            if "aliases" in data and isinstance(data["aliases"], list):
+                for alias in data["aliases"]:
+                    self._item_aliases[university_id].add(self.normalize(alias))
+            for key, value in data.items():
+                if key not in ("id",):
+                    self._collect_item_aliases(university_id, value)
+        elif isinstance(data, list):
+            for item in data:
+                self._collect_item_aliases(university_id, item)
+
     def reload_database(self) -> None:
-        """
-        Reload all JSON files from disk.
-        Useful when new universities are added without restarting the bot.
-        """
         self.load_database()
 
     @property
     def is_loaded(self) -> bool:
-        """Check if the knowledge base has been loaded."""
         return self._loaded
 
     @property
     def universities(self) -> List[str]:
-        """Return list of loaded university IDs."""
         return list(self._cache.keys())
 
     # ============================================================
@@ -111,256 +166,338 @@ class KnowledgeManager:
     # ============================================================
 
     def find_university(self, query: str) -> Optional[str]:
-        """
-        Find a university ID by matching the query against aliases.
-
-        Args:
-            query: User's text that may contain a university name/alias.
-
-        Returns:
-            university_id if found, else None.
-        """
-        query_lower = query.lower()
-
-        # Direct match
-        if query_lower in self._aliases_map:
-            return self._aliases_map[query_lower]
-
-        # Partial match (query contains an alias, or alias contains query)
+        query_norm = self.normalize(query)
+        if query_norm in self._aliases_map:
+            return self._aliases_map[query_norm]
         for alias, uid in self._aliases_map.items():
-            if query_lower in alias or alias in query_lower:
+            if query_norm in alias or alias in query_norm:
                 return uid
-
         return None
 
     def get_university_data(self, university_id: str) -> Optional[dict]:
-        """Retrieve the full data dict for a university ID."""
         return self._cache.get(university_id)
 
     # ============================================================
-    # Smart Search Engine
+    # Query Cleaning
+    # ============================================================
+
+    def _clean_query(self, user_text: str, university_id: str) -> List[str]:
+        query = self.normalize(user_text)
+
+        # Remove university aliases
+        for alias in sorted(self._aliases_map, key=len, reverse=True):
+            if alias and alias in query:
+                query = query.replace(alias, "")
+                break
+
+        # Remove item-level aliases (college names, etc.)
+        if university_id in self._item_aliases:
+            for alias in sorted(self._item_aliases[university_id], key=len, reverse=True):
+                if alias and alias in query:
+                    query = query.replace(alias, "")
+                    break
+
+        stop_words = {
+            "في", "عن", "ما", "هو", "هي", "هل", "وين", "اين", "ابي", "ابي",
+            "عطني", "اريد", "اريد", "بخصوص", "شنو", "ايش", "كيف", "متى",
+            "لو", "سمحت", "تكفي", "تكفون", "ممكن", "بغيت", "ابغى", "ابغي",
+            "the", "is", "of", "in", "for", "what", "where", "how", "a", "an",
+        }
+
+        words = [
+            w.strip()
+            for w in query.split()
+            if len(w.strip()) > 1 and w.strip() not in stop_words
+        ]
+
+        return words if words else [query.strip()]
+
+    # ============================================================
+    # Content Item Detection
+    # ============================================================
+
+    def _is_content_item(self, item: dict) -> bool:
+        return bool(set(item.keys()) & self.CONTENT_KEYS)
+
+    # ============================================================
+    # Match Scoring
+    # ============================================================
+
+    def _score_match(self, query_words: List[str], text: str) -> int:
+        if not text:
+            return 0
+
+        text_norm = self.normalize(text)
+        text_words = set(text_norm.split())
+        score = 0
+
+        full_phrase = " ".join(query_words)
+        if full_phrase in text_norm:
+            score += 20
+
+        for qw in query_words:
+            if qw in text_words:
+                score += 10
+            elif any(qw in tw for tw in text_words):
+                score += 5
+            elif any(tw in qw for tw in text_words):
+                score += 3
+
+        return score
+
+    def _score_dict(self, query_words: List[str], item: dict) -> int:
+        score = 0
+
+        for key, value in item.items():
+            if key in ("id", "score", "_"):
+                continue
+
+            weight = self.FIELD_WEIGHTS.get(key, 1)
+
+            if isinstance(value, str):
+                score += self._score_match(query_words, value) * weight
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, str):
+                        score += self._score_match(query_words, v) * weight
+                    elif isinstance(v, dict):
+                        score += self._score_dict(query_words, v)
+            elif isinstance(value, dict):
+                score += self._score_dict(query_words, value)
+
+        return score
+
+    # ============================================================
+    # Section Type Bonus
+    # ============================================================
+
+    def _get_section_bonus(self, section_key: str) -> int:
+        clean_key = section_key.split("/")[-1] if "/" in section_key else section_key
+        return self.SECTION_TYPE_BONUS.get(clean_key, 0)
+
+    # ============================================================
+    # Cache Management
+    # ============================================================
+
+    def _cache_key(self, university_id: str, user_text: str) -> Tuple[str, str]:
+        return (university_id, self.normalize(user_text))
+
+    def _set_cache(self, key: Tuple[str, str], value: dict) -> None:
+        if len(self._search_cache) >= self.MAX_CACHE_SIZE:
+            self._search_cache.popitem(last=False)
+        self._search_cache[key] = value
+
+    def _get_cache(self, key: Tuple[str, str]) -> Optional[dict]:
+        if key in self._search_cache:
+            self._search_cache.move_to_end(key)
+            return self._search_cache[key]
+        return None
+
+    # ============================================================
+    # Deep Search with Scoring
     # ============================================================
 
     def search(self, user_text: str) -> dict:
-        """
-        Main search entry point.
-        Extracts university and intent from user text, then searches
-        the relevant sections.
-
-        Args:
-            user_text: The full user message.
-
-        Returns:
-            dict with keys: found, university, section, title, answer, url
-            or {"found": False}
-        """
+        """Main search with per-university query caching."""
         if not self._loaded:
             return {"found": False}
 
-        # Step 1: Identify the university
         university_id = self.find_university(user_text)
+        if not university_id and len(self._cache) == 1:
+            university_id = next(iter(self._cache))
         if not university_id:
             return {"found": False}
+
+        ck = self._cache_key(university_id, user_text)
+        cached = self._get_cache(ck)
+        if cached is not None:
+            if self.DEBUG:
+                print(f"📦 Cache hit: {ck}")
+            return cached
 
         university_data = self._cache.get(university_id)
         if not university_data:
             return {"found": False}
 
-        # Step 2: Search all sections for matching content
-        result = self._search_all_sections(user_text, university_data)
-        if result:
-            result["university"] = university_data.get("name", university_id)
+        query_words = self._clean_query(user_text, university_id)
+
+        if self.DEBUG:
+            print(f"🔍 Query: {user_text}")
+            print(f"   Words: {query_words}")
+
+        all_results: List[Tuple[int, dict]] = []
+        self._deep_search_scored(query_words, university_data, "", all_results, set())
+
+        if not all_results:
+            result = {"found": False}
+            self._set_cache(ck, result)
             return result
 
-        return {"found": False}
+        # Deduplicate
+        seen = set()
+        unique_results = []
+        for score, result in all_results:
+            key = (result.get("section", ""), result.get("title", ""), result.get("url", ""))
+            if key not in seen:
+                seen.add(key)
+                unique_results.append((score, result))
 
-    def _search_all_sections(self, query: str, data: dict) -> Optional[dict]:
-        """
-        Iterate over all sections in the university data and search for
-        matching content using keywords and text matching.
+        all_results = unique_results
+        all_results.sort(key=lambda x: x[0], reverse=True)
+        all_results = all_results[:self.MAX_RESULTS]
 
-        Args:
-            query: The user's question (lowercased for matching).
-            data: The university data dict.
+        best_score, best_result = all_results[0]
 
-        Returns:
-            A result dict if found, else None.
-        """
-        query_lower = query.lower()
-        keywords_map = data.get("keywords", {})
+        if best_score < self.MIN_SCORE:
+            result = {"found": False}
+            self._set_cache(ck, result)
+            return result
 
-        # Check each section
-        for section_key, section_data in data.items():
-            if section_key in ("id", "name", "short_name", "city", "type", "aliases"):
-                continue
+        best_result["university"] = university_data.get("name", university_id)
+        best_result["score"] = best_score
 
-            result = self._search_section(
-                query_lower, section_key, section_data, keywords_map
-            )
-            if result:
-                return result
+        if self.DEBUG:
+            print(f"   ✅ Best: {best_result['title']} (score={best_score})")
 
-        return None
+        self._set_cache(ck, best_result)
+        return best_result
 
-    def _search_section(
+    def _deep_search_scored(
         self,
-        query: str,
-        section_key: str,
-        section_data: Any,
-        keywords_map: dict,
-    ) -> Optional[dict]:
+        query_words: List[str],
+        data: Any,
+        path: str,
+        results: List[Tuple[int, dict]],
+        scored_ids: set,
+    ) -> None:
         """
-        Search a single section for matching content.
-
-        Handles: lists of dicts, dicts, and strings.
+        Recursively search all data.
+        scored_ids prevents scoring the same item twice (via keywords vs recursion).
         """
-        # 1. Check keywords for this section
-        section_kw = keywords_map.get(section_key, [])
-        for kw in section_kw:
-            if kw.lower() in query:
-                # Keyword matched — try to extract the best item
-                return self._extract_best_item(
-                    section_key, section_data, kw
-                )
+        if isinstance(data, dict):
+            item_id = id(data)
 
-        # 2. Direct text search inside the section
-        if isinstance(section_data, list):
-            return self._search_list(query, section_key, section_data)
+            # Score content items (once only)
+            if self._is_content_item(data) and item_id not in scored_ids:
+                scored_ids.add(item_id)
+                score = self._score_dict(query_words, data)
+                if score > 0:
+                    section_key = path.split("/")[-1] if "/" in path else path
+                    score += self._get_section_bonus(section_key)
+                    result = self._item_to_result(path, data)
+                    results.append((score, result))
 
-        elif isinstance(section_data, dict):
-            return self._search_dict(query, section_key, section_data)
+            # Keywords: process once, add section bonus to results
+            kw_data = data.get("keywords")
+            if kw_data and item_id not in scored_ids:
+                scored_ids.add(item_id)
+                self._process_keywords(query_words, kw_data, data, results, scored_ids)
 
-        elif isinstance(section_data, str) and section_data:
-            # Simple string value (e.g., phone, email)
-            query_words = query.split()
-            if any(word in section_data.lower() for word in query_words):
-                return {
-                    "found": True,
-                    "section": section_key,
-                    "title": section_key.replace("_", " ").title(),
-                    "answer": section_data,
-                    "url": section_data if section_data.startswith("http") else "",
-                }
+            # Recurse
+            for key, value in data.items():
+                if key in ("id",):
+                    continue
+                new_path = f"{path}/{key}" if path else key
+                self._deep_search_scored(query_words, value, new_path, results, scored_ids)
 
-        return None
+        elif isinstance(data, list):
+            for item in data:
+                self._deep_search_scored(query_words, item, path, results, scored_ids)
 
-    def _search_list(
-        self, query: str, section_key: str, items: list
-    ) -> Optional[dict]:
+        elif isinstance(data, str) and data:
+            score = self._score_match(query_words, data)
+            if score > 0:
+                result = self._string_to_result(path, data)
+                results.append((score, result))
+
+    def _process_keywords(
+        self,
+        query_words: List[str],
+        kw_data: Any,
+        parent_data: dict,
+        results: List[Tuple[int, dict]],
+        scored_ids: set,
+    ) -> None:
         """
-        Search a list of items for a match using partial word matching.
-        Each word in the query must appear somewhere in the item text.
+        Process keywords in both dict and list formats.
+        Adds SECTION_TYPE_BONUS to results.
         """
-        query_words = query.split()
+        if isinstance(kw_data, dict):
+            for kw_key, kw_list in kw_data.items():
+                if isinstance(kw_list, list):
+                    for kw in kw_list:
+                        if self._score_match(query_words, kw) > 5:
+                            self._score_related_sections(
+                                query_words, parent_data, results, scored_ids
+                            )
+                            break  # One match per keyword group is enough
 
-        for item in items:
-            if isinstance(item, dict):
-                # Collect all text values from the item
-                name = item.get("name", "")
-                title = item.get("title", "")
-                description = item.get("description", "")
-                category = item.get("category", "")
-                username = item.get("username", "")
-                company = item.get("company", "")
-                position = item.get("position", "")
+        elif isinstance(kw_data, list):
+            for kw in kw_data:
+                if self._score_match(query_words, kw) > 5:
+                    self._score_related_sections(
+                        query_words, parent_data, results, scored_ids
+                    )
+                    break
 
-                # Combine all text fields into one searchable string
-                item_text = (
-                    f"{name} {title} {description} {category} "
-                    f"{username} {company} {position}"
-                ).lower()
-
-                # Check if ALL query words appear somewhere in the item text
-                if all(word in item_text for word in query_words):
-                    return self._item_to_result(section_key, item)
-
-            elif isinstance(item, str):
-                if all(word in item.lower() for word in query_words):
-                    return {
-                        "found": True,
-                        "section": section_key,
-                        "title": item,
-                        "answer": item,
-                        "url": "",
-                    }
-
-        return None
-
-    def _search_dict(
-        self, query: str, section_key: str, data: dict
-    ) -> Optional[dict]:
-        """Search a dict for a match in keys or values."""
-        query_words = query.split()
-        # Check if any key name or value matches
-        for key, value in data.items():
-            if isinstance(value, str) and value:
-                if any(word in key.lower() or word in value.lower() for word in query_words):
-                    return {
-                        "found": True,
-                        "section": section_key,
-                        "title": key.replace("_", " ").title(),
-                        "answer": value if not value.startswith("http") else value,
-                        "url": value if value.startswith("http") else "",
-                    }
-        return None
-
-    def _extract_best_item(
-        self, section_key: str, section_data: Any, keyword: str
-    ) -> Optional[dict]:
-        """Extract the most relevant item from a section after a keyword match."""
-        if isinstance(section_data, list):
-            for item in section_data:
-                if isinstance(item, dict):
-                    # Try to find the item most related to the keyword
-                    name = item.get("name", "")
-                    title = item.get("title", "")
-                    item_text = f"{name} {title}".lower()
-                    if keyword.lower() in item_text:
-                        return self._item_to_result(section_key, item)
-            # Fallback: return first item
-            if section_data and isinstance(section_data[0], dict):
-                return self._item_to_result(section_key, section_data[0])
-
-        elif isinstance(section_data, dict):
-            return {
-                "found": True,
-                "section": section_key,
-                "title": section_key.replace("_", " ").title(),
-                "answer": str(section_data),
-                "url": "",
-            }
-
-        elif isinstance(section_data, str) and section_data:
-            return {
-                "found": True,
-                "section": section_key,
-                "title": section_key.replace("_", " ").title(),
-                "answer": section_data,
-                "url": section_data if section_data.startswith("http") else "",
-            }
-
-        return None
+    def _score_related_sections(
+        self,
+        query_words: List[str],
+        parent_data: dict,
+        results: List[Tuple[int, dict]],
+        scored_ids: set,
+    ) -> None:
+        """Score items in all related sections with section bonus."""
+        skip_keys = {"id", "aliases", "keywords", "name", "short_name", "city", "type"}
+        for section_key, section_value in parent_data.items():
+            if section_key in skip_keys:
+                continue
+            if isinstance(section_value, list):
+                for item in section_value:
+                    if isinstance(item, dict) and id(item) not in scored_ids:
+                        scored_ids.add(id(item))
+                        s = self._score_dict(query_words, item)
+                        if s > 0:
+                            s += self._get_section_bonus(section_key)  # ✅ Fixed
+                            r = self._item_to_result(section_key, item)
+                            results.append((s, r))
 
     def _item_to_result(self, section_key: str, item: dict) -> dict:
-        """Convert a dict item to a standardized search result."""
+        fallback = section_key.split("/")[-1] if "/" in section_key else section_key
+
         title = (
             item.get("name")
             or item.get("title")
+            or item.get("question")
             or item.get("channel")
             or item.get("username")
             or item.get("company")
-            or section_key.replace("_", " ").title()
+            or item.get("position")
+            or fallback
         )
         url = item.get("url", "")
-        description = item.get("description", "")
-        answer = description or url or str(item)
+        description = item.get("description", "") or item.get("answer", "")
+        answer = description if description and not description.startswith("http") else ""
+        if not answer:
+            answer = url
 
         return {
             "found": True,
-            "section": section_key,
+            "section": fallback,
             "title": title,
             "answer": answer,
             "url": url,
+        }
+
+    def _string_to_result(self, key: str, value: str) -> dict:
+        section = key.split("/")[-1] if "/" in key else key
+        is_url = value.startswith("http")
+        return {
+            "found": True,
+            "section": section,
+            "title": section.replace("_", " ").title(),
+            "answer": value if not is_url else "",
+            "url": value if is_url else "",
         }
 
     # ============================================================
@@ -368,91 +505,27 @@ class KnowledgeManager:
     # ============================================================
 
     def get_section(self, university_id: str, section: str) -> Optional[Any]:
-        """Retrieve a specific section from a university's data."""
         data = self._cache.get(university_id)
         if data:
             return data.get(section)
         return None
 
     def list_universities(self) -> List[Dict[str, str]]:
-        """List all loaded universities with name and ID."""
         return [
             {"id": uid, "name": data.get("name", uid)}
             for uid, data in self._cache.items()
         ]
 
-    def search_by_keyword(self, keyword: str) -> List[dict]:
-        """
-        Search all universities for a specific keyword.
-        Returns a list of matching results.
-        """
-        results = []
-        for uid, data in self._cache.items():
-            kw_map = data.get("keywords", {})
-            for section, keywords in kw_map.items():
-                if keyword.lower() in [k.lower() for k in keywords]:
-                    section_data = data.get(section)
-                    if section_data:
-                        result = self._extract_best_item(
-                            section, section_data, keyword
-                        )
-                        if result:
-                            result["university"] = data.get("name", uid)
-                            results.append(result)
-        return results
-
 
 # ============================================================
-# Singleton instance
+# Singleton
 # ============================================================
 _knowledge_instance: Optional[KnowledgeManager] = None
 
 
 def get_knowledge_manager(knowledge_dir: str = "knowledge") -> KnowledgeManager:
-    """
-    Get or create the singleton KnowledgeManager instance.
-
-    Args:
-        knowledge_dir: Path to the knowledge directory.
-
-    Returns:
-        The KnowledgeManager instance.
-    """
     global _knowledge_instance
     if _knowledge_instance is None:
         _knowledge_instance = KnowledgeManager(knowledge_dir)
         _knowledge_instance.load_database()
     return _knowledge_instance
-
-
-# ============================================================
-# Example usage
-# ============================================================
-if __name__ == "__main__":
-    km = KnowledgeManager("knowledge")
-    km.load_database()
-
-    print("\n" + "=" * 60)
-    print("Loaded universities:")
-    for uni in km.list_universities():
-        print(f"  • {uni['name']} ({uni['id']})")
-
-    print("\n" + "=" * 60)
-    test_queries = [
-        "جامعة الملك فيصل كلية إدارة الأعمال",
-        "KFU كلية الهندسة",
-        "الملك فيصل التقرير النهائي",
-        "وين البلاك بورد حق جامعة الملك فيصل",
-    ]
-
-    for q in test_queries:
-        print(f"\n🔍 Searching: '{q}'")
-        result = km.search(q)
-        if result.get("found"):
-            print(f"   ✅ Found!")
-            print(f"   University : {result.get('university')}")
-            print(f"   Section    : {result.get('section')}")
-            print(f"   Title      : {result.get('title')}")
-            print(f"   URL        : {result.get('url')}")
-        else:
-            print(f"   ❌ Not found in knowledge base")
