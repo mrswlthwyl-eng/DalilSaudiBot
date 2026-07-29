@@ -16,6 +16,7 @@ from telegram.ext import (
 
 from provider_manager import get_manager
 from conversation_memory import memory
+from knowledge_manager import get_knowledge_manager  # ← Knowledge Base
 
 TOKEN = os.getenv("BOT_TOKEN")
 
@@ -28,12 +29,11 @@ ALLOWED_GROUPS = {
     # -100xxxxxxxxxx,
 }
 
-ALLOWED_USERS = { 2076364383
+ALLOWED_USERS = {
+    2076364383,  # الحساب الشخصي
     # أضف User IDs للحسابات المسموح لها بالمحادثة الخاصة:
-    # ALLOWED_USERS.add(2076364383)
-    # 2076364383,
-    # -2076364383,
-    # ID # 2076364383,
+    # 123456789,
+    # 987654321,
 }
 
 # ============================================================
@@ -186,6 +186,11 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 # إنشاء مدير الذكاء الاصطناعي مرة واحدة فقط
 provider = get_manager()
 
+# ============================================================
+# Initialize Knowledge Manager (Singleton)
+# ============================================================
+knowledge = get_knowledge_manager("knowledge")
+
 
 # ============================================================
 # نظام التحقق من الصلاحيات
@@ -272,6 +277,37 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
     user_text = update.message.text
+
+    # ============================================================
+    # Knowledge Base Search - before calling Gemini
+    # ============================================================
+    kb_result = knowledge.search(user_text)
+
+    if kb_result.get("found"):
+        # Build answer from knowledge base
+        answer_parts = []
+
+        if kb_result.get("title"):
+            answer_parts.append(f"📌 {kb_result['title']}")
+
+        if kb_result.get("answer") and not kb_result.get("answer", "").startswith("http"):
+            answer_parts.append(kb_result["answer"])
+
+        if kb_result.get("url"):
+            answer_parts.append(f"🔗 {kb_result['url']}")
+
+        answer = "\n\n".join(answer_parts)
+
+        # Save conversation
+        memory.add_user_message(user_id, user_text)
+        memory.add_assistant_message(user_id, answer)
+
+        await update.message.reply_text(answer)
+        return  # Done — no need to call Gemini
+
+    # ============================================================
+    # Fallback to Gemini if knowledge base didn't find an answer
+    # ============================================================
 
     # سجل المحادثة
     history = memory.get_history(user_id)
