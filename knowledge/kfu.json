@@ -1,0 +1,500 @@
+{
+  "id": "kfu",
+  "name": "جامعة الملك فيصل",
+  "short_name": "KFU",
+  "city": "الأحساء",
+  "type": "جامعة حكومية",
+  "aliases": [
+    "جامعة الملك فيصل",
+    "الملك فيصل",
+    "KFU",
+    "KFU University"
+  ],
+
+  "info": {
+    "website": "https://www.kfu.edu.sa",
+    "about": "https://www.kfu.edu.sa/ar/Pages/AboutKFU.aspx",
+    "management": "https://www.kfu.edu.sa/ar/Pages/management-page.aspx",
+    "corporate_identity": "https://www.kfu.edu.sa/ar/Pages/Corporate-identity.aspx",
+    "university_strategy": "https://www.kfu.edu.sa/ar/Pages/University-Strategy.aspx"
+  },
+
+  "electronic_services": {
+    "student_portal": "https://my.kfu.edu.sa/ar/Pages/Home.aspx",
+    "student_service_details": "https://my.kfu.edu.sa/ar/Pages/ServiceDetails.aspx?sid=48",
+    "e_services": "https://www.kfu.edu.sa/ar/pages/psmain.aspx",
+    "login": "https://www.kfu.edu.sa/ar/_layouts/15/Authenticate.aspx?Source=/ar/Pages/PSMain.aspx",
+    "services_login": "https://services.kfu.edu.sa/Services/Account/Login?ReturnUrl=%2fservices",
+    "nafath_login": "https://services.kfu.edu.sa/Services/Account/Nafath",
+    "email": "https://mail.kfu.edu.sa/",
+    "service_details_7": "https://www.kfu.edu.sa/ar/Pages/PSDetails.aspx?sid=7",
+    "service_details_49": "https://www.kfu.edu.sa/ar/pages/servicedetails.aspx?sid=49",
+    "blackboard": ""
+  },
+
+  "programs": {
+    "graduate_studies": "https://www.kfu.edu.sa/ar/Deans/HigherStudies/Pages/Postgraduate-programs.aspx",
+    "bachelor": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%A8%D9%83%D8%A7%D9%84%D9%88%D8%B1%D9%8A%D9%88%D8%B3&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%B7%D9%84%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A7%D9%86%D8%AA%D8%B8%D8%A7%D9%85",
+    "master": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D9%85%D8%A7%D8%AC%D8%B3%D8%AA%D9%8A%D8%B1&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7",
+    "phd": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D9%83%D8%AA%D9%88%D8%B1%D8%A7%D9%87&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7",
+    "diploma": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D8%A8%D9%84%D9%88%D9%85&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A%D8%A7#emails-sm",
+    "diploma_professional": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%AF%D8%A8%D9%84%D9%88%D9%85%20%D9%85%D8%AA%D9%88%D8%B3%D8%B7%20%D9%85%D9%87%D9%86%D9%8A&pt=%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%B7%D9%84%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A7%D9%86%D8%AA%D8%B8%D8%A7%D9%85",
+    "short_courses": "https://www.kfu.edu.sa/ar/Pages/PSMain.aspx?dg=%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC%20%D8%AA%D8%AF%D8%B1%D9%8A%D8%A8%D9%8A&pt=%D8%A7%D9%84%D8%A8%D8%B1%D8%A7%D9%85%D8%AC%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D9%8A%D8%A9%20%D9%82%D8%B5%D9%8A%D8%B1%D8%A9%20%D8%A7%D9%84%D9%85%D8%AF%D9%89"
+  },
+
+  "colleges": [
+    {"name": "كلية إدارة الأعمال", "url": "https://www.kfu.edu.sa/ar/Colleges/business-administration/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم", "url": "https://www.kfu.edu.sa/ar/Colleges/Science/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم التطبيقية", "url": "https://www.kfu.edu.sa/ar/Colleges/AppliedSciences/Pages/Home-new.aspx"},
+    {"name": "كلية الصيدلة الإكلينيكية", "url": "https://www.kfu.edu.sa/ar/Colleges/clinical_pharmacy/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم الزراعية والأغذية", "url": "https://www.kfu.edu.sa/ar/Colleges/AgricultureSciences/Pages/Home-new.aspx"},
+    {"name": "كلية الطب البيطري", "url": "https://www.kfu.edu.sa/ar/Colleges/VeterinaryMedicine/Pages/Home-new.aspx"},
+    {"name": "كلية التربية", "url": "https://www.kfu.edu.sa/ar/Colleges/Education/Pages/Home-new.aspx"},
+    {"name": "كلية علوم الحاسب وتقنية المعلومات", "url": "https://www.kfu.edu.sa/ar/Colleges/Computer_Science/Pages/Home-new.aspx"},
+    {"name": "كلية الهندسة", "url": "https://www.kfu.edu.sa/ar/Colleges/AhsaEngineering/Pages/Home-new.aspx"},
+    {"name": "كلية الحقوق", "url": "https://www.kfu.edu.sa/ar/Colleges/law/Pages/Home-new.aspx"},
+    {"name": "كلية الدراسات الإسلامية", "url": "https://www.kfu.edu.sa/ar/Colleges/IslamicStudies"},
+    {"name": "كلية الطب", "url": "https://www.kfu.edu.sa/ar/Colleges/AhsaMedicine/Pages/Home-new.aspx"},
+    {"name": "كلية طب الأسنان", "url": "https://www.kfu.edu.sa/ar/Colleges/Dentistry/Pages/Home-new.aspx"},
+    {"name": "كلية العلوم الطبية التطبيقية", "url": "https://www.kfu.edu.sa/ar/Colleges/appliedmedical_sciences/Pages/Home-new.aspx"},
+    {"name": "مركز اللغات الأجنبية", "url": "https://www.kfu.edu.sa/ar/Colleges/arts/Pages/ForeignLanguagesCenter.aspx"}
+  ],
+
+  "deanships": [
+    {"name": "عمادة القبول والتسجيل", "url": "https://www.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/Home-new.aspx"},
+    {"name": "عمادة التعلم الإلكتروني", "url": "https://www.kfu.edu.sa/ar/Deans/E-Learning/Pages/Home-new.aspx"},
+    {"name": "عمادة البحث العلمي", "url": "https://www.kfu.edu.sa/ar/Deans/Research/Pages/Home-new.aspx"},
+    {"name": "عمادة شؤون المكتبات", "url": "https://www.kfu.edu.sa/ar/Deans/Library/Pages/Home-new.aspx"},
+    {"name": "عمادة الجودة", "url": "https://www.kfu.edu.sa/ar/Deans/QA/Pages/Home-new.aspx"},
+    {"name": "عمادة شؤون الطلاب بالأحساء", "url": "https://www.kfu.edu.sa/ar/Deans/AhsaaStudent/Pages/Home-new.aspx"},
+    {"name": "عمادة السنة التحضيرية", "url": "https://www.kfu.edu.sa/ar/Deans/PreparatoryYear/Pages/Home-new.aspx"}
+  ],
+
+  "centers": [
+    {"name": "مركز الثروة السمكية", "url": "https://www.kfu.edu.sa/ar/Centers/fish-resources/Pages/home-new.aspx"},
+    {"name": "مركز أبحاث الإبل", "url": "https://www.kfu.edu.sa/ar/Centers/Camels/Pages/Home-new.aspx"},
+    {"name": "مركز أبحاث النخيل", "url": "https://www.kfu.edu.sa/ar/Centers/palms/Pages/Home-new.aspx"},
+    {"name": "مركز دراسات المياه", "url": "https://www.kfu.edu.sa/ar/Centers/WaterStudies/Pages/home-new.aspx"},
+    {"name": "وحدة العلوم والتقنية", "url": "https://www.kfu.edu.sa/ar/Centers/science_tech_Unit/Pages/Home-new.aspx"},
+    {"name": "مركز الاستشارات القانونية", "url": "https://www.kfu.edu.sa/ar/Centers/LegalConsultations/Pages/Home.aspx"},
+    {"name": "مركز الاستشارات البحثية", "url": "https://www.kfu.edu.sa/ar/Centers/res_cons/Pages/Home-new.aspx"},
+    {"name": "مركز الابتكار", "url": "https://www.kfu.edu.sa/ar/Centers/Innovation/Pages/home.aspx"},
+    {"name": "مركز التدريب البيطري", "url": "https://www.kfu.edu.sa/ar/Centers/VetTraining/Pages/vision.aspx"},
+    {"name": "مركز علم الطيور", "url": "https://www.kfu.edu.sa/ar/Centers/Ornithology/Pages/Home-new.aspx"},
+    {"name": "مركز العمل التطوعي", "url": "https://www.kfu.edu.sa/ar/Centers/VolunteerWork/Pages/Home.aspx"},
+    {"name": "مركز الوثائق", "url": "https://www.kfu.edu.sa/ar/Centers/DocCenter/Pages/Home-new.aspx"},
+    {"name": "وحدة الإبداع", "url": "https://www.kfu.edu.sa/ar/Centers/CreativityUnit/Pages/Structural1.aspx"}
+  ],
+
+  "administrations": [
+    {"name": "وكالة شؤون الطالبات", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/Vice_President_girls_affairs/Pages/Home-new.aspx"},
+    {"name": "وكالة الشؤون الأكاديمية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/ViceAcademicAffairs/Pages/Home-new.aspx"},
+    {"name": "وكالة التطوير", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/Vice_President-development/Pages/Home-new.aspx"},
+    {"name": "وكالة المسؤولية المجتمعية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/VicePresidentacsr/Pages/Home-new.aspx"},
+    {"name": "مكتب نائب الرئيس", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/vice-president/Pages/Home-new.aspx"},
+    {"name": "قطاع الابتكار", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/InnovationSector/Pages/Home.aspx"},
+    {"name": "وحدة الموارد الذاتية", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/SelfResources/Pages/Abuteunit.aspx"},
+    {"name": "وحدة التميز الطلابي", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/ViceAcademicAffairs/StudentExcellence/Pages/Home.aspx"},
+    {"name": "إدارة المنح الدراسية", "url": "https://www.kfu.edu.sa/ar/Departments/ScholarshipAdministration/Pages/Home.aspx"},
+    {"name": "إدارة الخطط الاستراتيجية", "url": "https://www.kfu.edu.sa/ar/Departments/StrategicPlans/Pages/Home.aspx"},
+    {"name": "أمانة مجلس الجامعة", "url": "https://www.kfu.edu.sa/ar/Departments/UnivCouncilSecretariat/Pages/Home.aspx"},
+    {"name": "المجلس العلمي", "url": "https://www.kfu.edu.sa/ar/Departments/Scientific-Council/Pages/Home-new.aspx"},
+    {"name": "إدارة العلاقات الصناعية", "url": "https://www.kfu.edu.sa/ar/Departments/IndustrialRelations/Pages/Description.aspx"},
+    {"name": "إدارة المرافق", "url": "https://www.kfu.edu.sa/ar/Departments/Facilities/Pages/Home.aspx"},
+    {"name": "إدارة الأمن والسلامة", "url": "https://www.kfu.edu.sa/ar/Departments/Security_safety/Pages/Home-new.aspx"},
+    {"name": "إدارة الاتصالات المؤسسية", "url": "https://www.kfu.edu.sa/ar/Departments/DCC/Pages/Home.aspx"},
+    {"name": "إدارة الاستثمار", "url": "https://www.kfu.edu.sa/ar/Departments/Investment/Pages/Home.aspx"},
+    {"name": "إدارة تبادل المعرفة", "url": "https://www.kfu.edu.sa/ar/Departments/knowledgeExchange/Pages/Home-new.aspx"},
+    {"name": "إدارة الصحافة", "url": "https://www.kfu.edu.sa/ar/Departments/press/Pages/Home-new.aspx"},
+    {"name": "إدارة مراقبة المخزون", "url": "https://www.kfu.edu.sa/ar/Departments/Inventory-Control/Pages/Home-new.aspx"},
+    {"name": "إدارة الأمن السيبراني", "url": "https://www.kfu.edu.sa/ar/Departments/CyberSecurity/Pages/Home.aspx"},
+    {"name": "إدارة النقل", "url": "https://www.kfu.edu.sa/ar/Departments/TransportService/Pages/Home-new.aspx"},
+    {"name": "وحدة المؤتمرات", "url": "https://www.kfu.edu.sa/ar/Departments/SeniorManagement/VicePresidentacsr/VicePresidency/ConferenceUnit/Pages/home-new.aspx"},
+    {"name": "إدارة الإسكان", "url": "https://www.kfu.edu.sa/ar/Departments/Housing-Department/Pages/Home.aspx"},
+    {"name": "إدارة التخطيط", "url": "https://www.kfu.edu.sa/ar/Departments/planning/Pages/Home-new.aspx"},
+    {"name": "إدارة الشراكة المجتمعية", "url": "https://www.kfu.edu.sa/ar/Departments/CommunityPartnership_Dev/Pages/Home-new.aspx"},
+    {"name": "إدارة المستلزمات الطبية", "url": "https://www.kfu.edu.sa/ar/Departments/MedicalSupply/Pages/Home.aspx"},
+    {"name": "إدارة الخدمات الطبية", "url": "https://www.kfu.edu.sa/ar/Departments/Medical_Srvices/Pages/Home-new.aspx"},
+    {"name": "إدارة الشؤون المالية", "url": "https://www.kfu.edu.sa/ar/Departments/financial-Affairs/Pages/Home-new.aspx"},
+    {"name": "إدارة الشؤون القانونية", "url": "https://www.kfu.edu.sa/ar/Departments/Legal/Pages/Home-new.aspx"},
+    {"name": "إدارة المشاريع والخدمات العامة", "url": "https://www.kfu.edu.sa/ar/Departments/projects-publicservices/Pages/Home-new.aspx"}
+  ],
+
+  "admission": {
+    "main": "https://www.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/Home-new.aspx",
+    "preparatory_year": "https://www.kfu.edu.sa/ar/deans/preparatoryyear/pages/freshstudentsgate.aspx"
+  },
+
+  "calendar": {
+    "academic_calendar": "https://mportal.kfu.edu.sa/ar/Deans/AdmissionRecordsDeanship/Pages/academiScedule1.aspx",
+    "interactive_calendar": "https://www.kfu.edu.sa/ar/deans/e-learning/pages/interactive_calender.aspx"
+  },
+
+  "policies": {
+    "it_faq": "https://www.kfu.edu.sa/ar/Deans/it/Pages/FAQ.aspx",
+    "it_faq_pdf": "https://www.kfu.edu.sa/ar/Deans/it/Documents/Questions.pdf",
+    "privacy_policy": "https://www.kfu.edu.sa/ar/Deans/it/Documents/Privacy_policy.pdf",
+    "safe_use_policy": "https://www.kfu.edu.sa/ar/Documents/Safe-Use-Policy.pdf",
+    "cybersecurity_policy": "https://services.kfu.edu.sa/Services/Content/CyberSecurityLegislationControls.pdf"
+  },
+
+  "external_links": {
+    "ministry_of_education": "https://www.moe.gov.sa/",
+    "eastern_province_emirate": "https://www.moi.gov.sa/wps/portal/Home/emirates/easternprovince"
+  },
+
+  "contact": {
+    "phone": "920002366",
+    "email": "info@kfu.edu.sa",
+    "city": "الأحساء"
+  },
+
+  "social": {
+    "x": "https://x.com/abdalah_hr",
+    "youtube": "",
+    "instagram": "",
+    "linkedin": "https://www.linkedin.com/in/abdalahsalman",
+    "telegram": "https://t.me/Trainingale",
+    "whatsapp_channel": "https://whatsapp.com/channel/0029VaDBxEb1CYoUvMsM4W14"
+  },
+
+  "telegram": {
+    "channels": [
+      {
+        "name": "التدريب التطبيقي - جامعة الملك فيصل",
+        "username": "Trainingale",
+        "url": "https://t.me/Trainingale",
+        "type": "official",
+        "category": "training",
+        "description": "القناة الرسمية لوحدة التدريب التطبيقي - المصدر الأساسي لنماذج وتعليمات التدريب",
+        "subscribers": ""
+      },
+      {
+        "name": "التدريب التطبيقي (قناة ثانية)",
+        "username": "training1a1",
+        "url": "https://t.me/training1a1",
+        "type": "official",
+        "category": "training",
+        "description": "قناة تدريب تطبيقي - محتوى مشابه للقناة الأساسية",
+        "subscribers": ""
+      },
+      {
+        "name": "القناة الاخبارية لجامعة الملك فيصل",
+        "username": "arareee12",
+        "url": "https://t.me/arareee12",
+        "type": "unofficial",
+        "category": "news",
+        "description": "نشر الأخبار والتحديثات الجامعية",
+        "subscribers": "4,378"
+      },
+      {
+        "name": "التدريب التعاوني",
+        "username": "Coop_Training2025",
+        "url": "https://t.me/Coop_Training2025",
+        "type": "unofficial",
+        "category": "training",
+        "description": "كتابة التقارير وإعداد مشاريع التخرج البرمجية - خبرة في التقارير والمشاريع",
+        "subscribers": "416"
+      },
+      {
+        "name": "قناة إدارة الأعمال KFU",
+        "username": "BA_KFU",
+        "url": "https://t.me/BA_KFU",
+        "type": "unofficial",
+        "category": "academic",
+        "description": "خدمة طلاب وطالبات تخصص إدارة الأعمال - قناة تطوعية",
+        "subscribers": "7,109"
+      },
+      {
+        "name": "وظائف قانونية Legal jobs",
+        "username": "jobs_law",
+        "url": "https://t.me/jobs_law",
+        "type": "external",
+        "category": "jobs",
+        "description": "نشر الوظائف القانونية وإعلانات المكاتب",
+        "subscribers": "30,708"
+      },
+      {
+        "name": "SAL / فرص تدريب تعاوني",
+        "username": "SALTRAI",
+        "url": "https://t.me/SALTRAI",
+        "type": "external",
+        "category": "training",
+        "description": "مساعدة طلاب كلية الحاسب في فترة التدريب التعاوني - استشارات",
+        "subscribers": "21,943"
+      },
+      {
+        "name": "وظائف هندسية و فنية",
+        "username": "Engineers_Jobs",
+        "url": "https://t.me/Engineers_Jobs",
+        "type": "external",
+        "category": "jobs",
+        "description": "طرح الوظائف الهندسية والفنية - إعلانات مجانية",
+        "subscribers": "56,617"
+      },
+      {
+        "name": "وظائف اسأل بنات الرياض",
+        "username": "askgirlsriyadh",
+        "url": "https://t.me/askgirlsriyadh",
+        "type": "external",
+        "category": "jobs",
+        "description": "نشر الوظائف والدورات والإعلانات التي تهم البنات - تغطية معارض",
+        "subscribers": "23,085"
+      },
+      {
+        "name": "أي وظيفة",
+        "username": "ewdifh",
+        "url": "https://t.me/ewdifh",
+        "type": "external",
+        "category": "jobs",
+        "description": "وظائف مدنية عسكرية شركات - نتائج قبول - مواعيد جامعات - دورات تدريبية",
+        "subscribers": ""
+      },
+      {
+        "name": "تطوير الذات النفسية والاجتماعية",
+        "username": "doratalthat_alnfsia",
+        "url": "https://t.me/doratalthat_alnfsia",
+        "type": "external",
+        "category": "development",
+        "description": "دورات وكتب مفيدة لتطوير الذات والمهارات - دورات نفسية واجتماعية",
+        "subscribers": "2,003"
+      },
+      {
+        "name": "عبدالله سلمان - موارد بشرية",
+        "username": "abdalah_hr",
+        "url": "https://t.me/abdalah_hr",
+        "type": "external",
+        "category": "jobs",
+        "description": "قناة موارد بشرية وتوظيف",
+        "subscribers": ""
+      },
+      {
+        "name": "قروب جامعة الملك فيصل - المستجدين",
+        "username": "KFU_P1",
+        "url": "https://t.me/KFU_P1",
+        "type": "group",
+        "category": "students",
+        "description": "قروب المستجدين المعتمد - دبلوم عن بعد",
+        "subscribers": "58,525"
+      },
+      {
+        "name": "قناة الدبلومات جامعة الملك فيصل",
+        "username": "dblomaaladara",
+        "url": "https://t.me/dblomaaladara",
+        "type": "group",
+        "category": "diploma",
+        "description": "توفير معلومات واستفسارات الدبلوم",
+        "subscribers": ""
+      },
+      {
+        "name": "استفسارات دبلومات جامعة الملك فيصل",
+        "username": "kingfaisaldeploma",
+        "url": "https://t.me/kingfaisaldeploma",
+        "type": "group",
+        "category": "diploma",
+        "description": "مناقشات واستفسارات الطلاب - قروب عام",
+        "subscribers": ""
+      },
+      {
+        "name": "دبلوم جامعة الملك فيصل عن بعد",
+        "username": "kfuFasalbbfjfkfn",
+        "url": "https://t.me/kfuFasalbbfjfkfn",
+        "type": "group",
+        "category": "diploma",
+        "description": "قروب عام استفسارات لجميع تخصصات الدبلوم عن بعد",
+        "subscribers": "11,838"
+      }
+    ],
+
+    "posts": [
+      {
+        "channel": "Trainingale",
+        "id": "456",
+        "url": "https://t.me/Trainingale/456",
+        "title": "إعلان تدريب تطبيقي",
+        "type": "announcement",
+        "tags": ["تدريب تطبيقي", "إعلان", "تعميم"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "455",
+        "url": "https://t.me/Trainingale/455",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "training1a1",
+        "id": "193",
+        "url": "https://t.me/training1a1/193",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "453",
+        "url": "https://t.me/Trainingale/453",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "452",
+        "url": "https://t.me/Trainingale/452",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "451",
+        "url": "https://t.me/Trainingale/451",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "450",
+        "url": "https://t.me/Trainingale/450",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "449",
+        "url": "https://t.me/Trainingale/449",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "448",
+        "url": "https://t.me/Trainingale/448",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "447",
+        "url": "https://t.me/Trainingale/447",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "445",
+        "url": "https://t.me/Trainingale/445",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "Trainingale",
+        "id": "443",
+        "url": "https://t.me/Trainingale/443?single",
+        "title": "منشور تدريب تطبيقي",
+        "type": "post",
+        "tags": ["تدريب تطبيقي"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247361",
+        "url": "https://t.me/kingfaisaldeploma/247361",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247328",
+        "url": "https://t.me/kingfaisaldeploma/247328",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "kingfaisaldeploma",
+        "id": "247019",
+        "url": "https://t.me/kingfaisaldeploma/247019",
+        "title": "استفسار دبلوم",
+        "type": "inquiry",
+        "tags": ["دبلوم", "استفسار"]
+      },
+      {
+        "channel": "dblomaaladara",
+        "id": "5018",
+        "url": "https://t.me/dblomaaladara/5018",
+        "title": "منشور دبلوم",
+        "type": "post",
+        "tags": ["دبلوم"]
+      },
+      {
+        "channel": "arareee12",
+        "id": "17166",
+        "url": "https://t.me/arareee12/17166",
+        "title": "خبر جامعي",
+        "type": "news",
+        "tags": ["أخبار", "جامعة"]
+      },
+      {
+        "channel": "arareee12",
+        "id": "17759",
+        "url": "https://t.me/arareee12/17759",
+        "title": "خبر جامعي",
+        "type": "news",
+        "tags": ["أخبار", "جامعة"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "444",
+        "url": "https://t.me/Coop_Training2025/444",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "513",
+        "url": "https://t.me/Coop_Training2025/513",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      },
+      {
+        "channel": "Coop_Training2025",
+        "id": "510",
+        "url": "https://t.me/Coop_Training2025/510",
+        "title": "منشور تدريب تعاوني",
+        "type": "training",
+        "tags": ["تدريب تعاوني", "تقارير", "مشاريع"]
+      }
+    ]
+  },
+
+  "keywords": {
+    "calendar": ["التقويم", "الفصل الدراسي", "بداية الدراسة", "الاختبارات", "الإجازات", "التقويم التفاعلي"],
+    "admission": ["القبول", "التسجيل", "شروط القبول", "التحويل", "مستجد", "سنة تحضيرية"],
+    "faculty": ["أعضاء هيئة التدريس", "الدكاترة", "الأساتذة"],
+    "services": ["الخدمات الإلكترونية", "البريد الجامعي", "النظام الأكاديمي", "خدماتي", "تسجيل دخول", "إيميل", "نفاذ"],
+    "graduate_studies": ["دراسات عليا", "ماجستير", "دكتوراه", "برامج عليا", "دبلوم", "دبلوم متوسط", "برامج قصيرة"],
+    "colleges": ["كلية إدارة أعمال", "كلية علوم", "كلية علوم تطبيقية", "كلية صيدلة", "كلية زراعة", "كلية طب بيطري", "كلية تربية", "كلية حاسب", "كلية هندسة", "كلية حقوق", "كلية دراسات إسلامية", "كلية طب", "كلية طب أسنان", "كلية علوم طبية تطبيقية", "علوم حاسب"],
+    "scholarships": ["منح", "منحة دراسية", "ابتعاث"],
+    "e_learning": ["تعلم إلكتروني", "تعليم عن بعد", "بلاك بورد"],
+    "research": ["بحث علمي", "أبحاث", "استشارات بحثية", "ابتكار"],
+    "centers": ["مركز أبحاث الإبل", "مركز أبحاث النخيل", "مركز دراسات المياه", "تطوع", "مركز وثائق"],
+    "library": ["مكتبة", "عمادة المكتبات"],
+    "external": ["وزارة التعليم", "إمارة الشرقية"],
+    "training": ["تدريب تطبيقي", "تدريب تعاوني", "وحدة التدريب", "نموذج تقرير", "تقرير مرحلي", "تقرير نهائي", "تقرير تدريب", "فرص تدريب", "كتابة تقارير", "مشاريع تخرج"],
+    "diploma": ["دبلوم عن بعد", "استفسارات دبلوم", "قروب دبلوم", "دبلومات"],
+    "news": ["أخبار الجامعة", "القناة الاخبارية", "مستجدات"],
+    "jobs": ["وظائف", "توظيف", "وظائف قانونية", "وظائف هندسية", "فرص عمل"],
+    "whatsapp": ["واتساب", "قناة واتساب"]
+  }
+}
