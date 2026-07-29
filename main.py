@@ -254,11 +254,12 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Step 1: Try Knowledge Base first
     # ============================================================
     kb_result = knowledge.search(user_text)
+    print(f"🔍 KB Search: '{user_text}' → found={kb_result.get('found')}")
 
     if kb_result.get("found"):
-        print(f"✅ Knowledge Base Found: {kb_result}")
+        print(f"✅ KB Matched: {kb_result.get('title')} | {kb_result.get('url')}")
 
-        # Build a clean answer from KB result
+        # Build clean answer from KB
         lines = []
         if kb_result.get("title"):
             lines.append(f"📌 {kb_result['title']}")
@@ -271,14 +272,13 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
-
         await update.message.reply_text(answer)
-        return  # Done, don't call Gemini
+        return
 
     # ============================================================
     # Step 2: Fallback to Gemini
     # ============================================================
-    print("❌ Knowledge Base not found, calling Gemini...")
+    print("❌ KB not found, using Gemini...")
 
     history = memory.get_history(user_id)
 
@@ -377,6 +377,9 @@ def main():
     )
 
     print("🤖 DaliliSaudiBot is running...")
+    print(f"📚 Knowledge Manager loaded: {knowledge.is_loaded}")
+    print(f"🏫 Universities: {knowledge.universities}")
+
     app.run_polling()
 
 
