@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from hijridate import Gregorian
+from hijridate import Hijri
 
 from telegram import Update
 from telegram.ext import (
@@ -19,6 +19,14 @@ from conversation_memory import memory
 
 TOKEN = os.getenv("BOT_TOKEN")
 
+# ============================================================
+# إعدادات الحماية - المجموعة المسموح بها فقط
+# ============================================================
+ALLOWED_CHAT_ID = -1004452669915  # غيّره عند الحاجة
+
+# ============================================================
+# System Prompt
+# ============================================================
 SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي ذكي ومتخصص في الجامعات السعودية والحياة الجامعية.
 
 دورك هو مساعدة الطلاب بطريقة طبيعية واحترافية، وكأنك مرشد أكاديمي يتحدث معهم في الواقع، وليس روبوتًا أو إعلانًا.
@@ -146,7 +154,7 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 - إذا كان السؤال يعتمد على جامعة أو كلية أو دولة معينة ولم يذكرها المستخدم، فاطلب منه تحديدها أولًا قبل الإجابة.
 - لا تقدم إجابة عامة لسؤال يحتاج معلومات خاصة بجامعة معينة.
 - لا تذكر سنوات أو تواريخ أو أرقام عشوائية.
-- إذا كانت المعلومة غير مؤكدة، فقل: "أحتاج معرفة اسم الجامعة أولًا حتى أقدم لك المعلومة الصحيحة."
+- إذا كانت المعلومة غير مؤكدة، فقل: "أحتاج معرفة اسم الجامعة أولاً حتى أقدم لك المعلومة الصحيحة."
 - اعتبر أن أي معلومة تقدمها قد يعتمد عليها الطالب، لذلك يجب أن تكون دقيقة وموثوقة.
 - لا تعطِ إجابة تبدو صحيحة إذا لم تكن متأكدًا منها.
 
@@ -167,7 +175,50 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 provider = get_manager()
 
 
+# ============================================================
+# دالة التحقق من الصلاحية
+# ============================================================
+def is_allowed_chat(update: Update) -> bool:
+    """
+    التحقق من أن الرسالة قادمة من المجموعة المسموح بها فقط.
+    تمنع المحادثات الخاصة والمجموعات غير المصرح بها.
+    """
+    chat_id = update.effective_chat.id
+    chat_type = update.effective_chat.type
+
+    # السماح فقط للمجموعة المحددة
+    if chat_id == ALLOWED_CHAT_ID:
+        return True
+
+    return False
+
+
+async def handle_unauthorized(update: Update):
+    """
+    التعامل مع المحادثات غير المصرح بها.
+    ترسل رسالة مناسبة مرة واحدة لكل نوع.
+    """
+    chat_type = update.effective_chat.type
+
+    if chat_type == "private":
+        await update.message.reply_text(
+            "هذا البوت مخصص للاستخدام داخل المجموعة الرسمية فقط."
+        )
+    else:
+        await update.message.reply_text(
+            "هذه المجموعة غير مصرح لها باستخدام البوت."
+        )
+
+
+# ============================================================
+# أوامر البوت
+# ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # أمر start يعمل فقط في المجموعة المسموح بها
+    if not is_allowed_chat(update):
+        await handle_unauthorized(update)
+        return
+
     await update.message.reply_text(
         "👋 أهلاً وسهلاً بك في دليلي الجامعي.\n\n"
         "🎓 كيف أقدر أساعدك اليوم؟"
@@ -175,6 +226,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # ============================================================
+    # طبقة الحماية - التحقق قبل أي معالجة
+    # ============================================================
+    if not is_allowed_chat(update):
+        await handle_unauthorized(update)
+        return  # توقف كامل، لا ذاكرة، لا Gemini، لا شيء
+
     user_id = update.effective_user.id
     user_text = update.message.text
 
@@ -184,39 +242,18 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # الوقت الحالي (السعودية)
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
 
-    # التاريخ الهجري - بطريقة متوافقة مع جميع إصدارات hijridate
+    # التاريخ الهجري - متوافق مع جميع إصدارات hijridate
     try:
-        # المحاولة الأولى: استخدام Gregorian.fromdate()
-        hijri = Gregorian.fromdate(now.date()).to_hijri()
+        hijri = Hijri.today()
         hijri_day = hijri.day
         hijri_month = hijri.month
         hijri_year = hijri.year
     except Exception:
-        # المحاولة الثانية: استخدام Gregorian() مباشرة
-        try:
-            hijri = Gregorian(
-                now.year,
-                now.month,
-                now.day
-            ).to_hijri()
-            hijri_day = hijri.day
-            hijri_month = hijri.month
-            hijri_year = hijri.year
-        except Exception:
-            # المحاولة الثالثة: استخدام Hijri مباشرة
-            try:
-                from hijridate import Hijri
-                hijri = Hijri.today()
-                hijri_day = hijri.day
-                hijri_month = hijri.month
-                hijri_year = hijri.year
-            except Exception:
-                # إذا فشلت جميع المحاولات، استخدم قيم افتراضية
-                hijri_day = 1
-                hijri_month = 1
-                hijri_year = 1446
+        hijri_day = 1
+        hijri_month = 1
+        hijri_year = 1446
 
-    # أسماء الأشهر الهجرية العربية يدوياً (لا تعتمد على month_name())
+    # أسماء الأشهر الهجرية العربية
     HIJRI_MONTHS = {
         1: "محرم",
         2: "صفر",
