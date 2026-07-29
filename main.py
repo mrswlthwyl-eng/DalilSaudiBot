@@ -28,7 +28,7 @@ ALLOWED_GROUPS = {
     # -100xxxxxxxxxx,
 }
 
-ALLOWED_USERS = {
+ALLOWED_USERS = { 2076364383
     # أضف User IDs للحسابات المسموح لها بالمحادثة الخاصة:
     # ALLOWED_USERS.add(2076364383)
     # 2076364383,
