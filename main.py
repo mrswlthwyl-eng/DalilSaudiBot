@@ -21,7 +21,7 @@ from knowledge_manager import get_knowledge_manager
 TOKEN = os.getenv("BOT_TOKEN")
 
 # ============================================================
-# نظام الصلاحيات - المجموعات والحسابات المفعلة
+# نظام الصلاحيات
 # ============================================================
 ALLOWED_GROUPS = {
     -1004452669915,
@@ -179,43 +179,40 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 """
 
 # ============================================================
-# Initialize AI & Knowledge
+# Initialize
 # ============================================================
 provider = get_manager()
 knowledge = get_knowledge_manager("knowledge")
 
 
 # ============================================================
-# نظام التحقق من الصلاحيات
+# Authorization
 # ============================================================
 def is_authorized(update: Update) -> bool:
     chat_type = update.effective_chat.type
-
     if chat_type in ("group", "supergroup"):
         return update.effective_chat.id in ALLOWED_GROUPS
     elif chat_type == "private":
         return update.effective_user.id in ALLOWED_USERS
-
     return False
 
 
 def log_unauthorized(update: Update):
     user = update.effective_user
     chat = update.effective_chat
-
     print("=" * 50)
     print("🚫 محاولة استخدام غير مصرح بها:")
     print(f"   Chat ID    : {chat.id}")
     print(f"   Chat Type  : {chat.type}")
     print(f"   User ID    : {user.id}")
-    print(f"   Username   : @{user.username}" if user.username else "   Username   : لا يوجد")
+    username = f"@{user.username}" if user.username else "لا يوجد"
+    print(f"   Username   : {username}")
     print(f"   Full Name  : {user.full_name}")
     print("=" * 50)
 
 
 async def handle_unauthorized(update: Update):
     chat_type = update.effective_chat.type
-
     if chat_type == "private":
         await update.message.reply_text(
             "هذا الحساب غير مفعل، يرجى التواصل مع المطور لتفعيل حسابك."
@@ -227,14 +224,13 @@ async def handle_unauthorized(update: Update):
 
 
 # ============================================================
-# أوامر البوت
+# Commands
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_authorized(update):
         log_unauthorized(update)
         await handle_unauthorized(update)
         return
-
     await update.message.reply_text(
         "👋 أهلاً وسهلاً بك في دليلي الجامعي.\n\n"
         "🎓 كيف أقدر أساعدك اليوم؟"
@@ -251,12 +247,19 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
     # ============================================================
-    # Step 1: Try Knowledge Base
+    # STEP 1: Knowledge Base (MUST run first)
     # ============================================================
     kb_result = knowledge.search(user_text)
 
+    print("=" * 40)
+    print(f"📝 Query : {user_text}")
+    print(f"🔍 KB    : found={kb_result.get('found')}")
+
     if kb_result.get("found"):
-        print(f"✅ KB: {kb_result.get('title')} → {kb_result.get('url')}")
+        print(f"✅ KB MATCH!")
+        print(f"   Title : {kb_result.get('title')}")
+        print(f"   URL   : {kb_result.get('url')}")
+        print("=" * 40)
 
         lines = []
         if kb_result.get("title"):
@@ -271,24 +274,22 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
         await update.message.reply_text(answer)
-        return
+        return  # ← IMPORTANT: Stop here, do NOT call AI
 
     # ============================================================
-    # Step 2: Gemini
+    # STEP 2: AI Fallback (only if KB found nothing)
     # ============================================================
+    print("❌ KB: no match → calling AI")
+    print("=" * 40)
+
     history = memory.get_history(user_id)
-
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
 
     try:
         hijri = Hijri.today()
-        hijri_day = hijri.day
-        hijri_month = hijri.month
-        hijri_year = hijri.year
+        hijri_day, hijri_month, hijri_year = hijri.day, hijri.month, hijri.year
     except Exception:
-        hijri_day = 1
-        hijri_month = 1
-        hijri_year = 1446
+        hijri_day, hijri_month, hijri_year = 1, 1, 1446
 
     HIJRI_MONTHS = {
         1: "محرم", 2: "صفر", 3: "ربيع الأول",
@@ -296,16 +297,13 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         7: "رجب", 8: "شعبان", 9: "رمضان",
         10: "شوال", 11: "ذو القعدة", 12: "ذو الحجة",
     }
-
-    hijri_month_name = HIJRI_MONTHS.get(hijri_month, "محرم")
-    hijri_date = f"{hijri_day} {hijri_month_name} {hijri_year} هـ"
+    hijri_date = f"{hijri_day} {HIJRI_MONTHS.get(hijri_month, 'محرم')} {hijri_year} هـ"
 
     days = {
         "Monday": "الاثنين", "Tuesday": "الثلاثاء",
         "Wednesday": "الأربعاء", "Thursday": "الخميس",
         "Friday": "الجمعة", "Saturday": "السبت", "Sunday": "الأحد",
     }
-
     current_day = days.get(now.strftime("%A"), now.strftime("%A"))
 
     current_time_context = f"""
@@ -317,18 +315,6 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 اليوم: {current_day}
 الوقت: {now.strftime("%H:%M:%S")}
 المنطقة الزمنية: Asia/Riyadh
-
-هذه المعلومات صحيحة وحديثة.
-
-إذا سألك المستخدم عن:
-- الوقت
-- التاريخ الميلادي
-- التاريخ الهجري
-- اليوم
-
-فاستخدم هذه المعلومات فقط.
-
-لا تخمن أي تاريخ أو وقت أو يوم مختلف.
 ==============================
 """
 
@@ -340,12 +326,10 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             history=history,
             user_prompt=user_text,
         )
-
         answer = re.sub(r"[*_`#]+", "", answer).strip()
 
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
-
         await update.message.reply_text(answer)
 
     except Exception as e:
@@ -366,16 +350,10 @@ def main():
         .post_shutdown(on_shutdown)
         .build()
     )
-
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message)
-    )
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply_message))
 
     print("🤖 DaliliSaudiBot is running...")
-    print(f"📚 Knowledge Loaded: {knowledge.is_loaded}")
-    print(f"🏫 Universities: {knowledge.universities}")
-
     app.run_polling()
 
 
