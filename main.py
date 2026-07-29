@@ -178,10 +178,10 @@ SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي 
 - لا تستخدم ** أو __ أو # أو ``` أو *.
 """
 
-# إنشاء مدير الذكاء الاصطناعي مرة واحدة فقط
+# ============================================================
+# Initialize AI & Knowledge
+# ============================================================
 provider = get_manager()
-
-# Initialize Knowledge Manager (Singleton)
 knowledge = get_knowledge_manager("knowledge")
 
 
@@ -189,17 +189,10 @@ knowledge = get_knowledge_manager("knowledge")
 # نظام التحقق من الصلاحيات
 # ============================================================
 def is_authorized(update: Update) -> bool:
-    """
-    التحقق من صلاحية المستخدم أو المجموعة.
-    - المجموعة: يتحقق من Chat ID
-    - الخاص: يتحقق من User ID
-    - القنوات والأنواع الأخرى: مرفوضة تلقائياً
-    """
     chat_type = update.effective_chat.type
 
     if chat_type in ("group", "supergroup"):
         return update.effective_chat.id in ALLOWED_GROUPS
-
     elif chat_type == "private":
         return update.effective_user.id in ALLOWED_USERS
 
@@ -207,10 +200,6 @@ def is_authorized(update: Update) -> bool:
 
 
 def log_unauthorized(update: Update):
-    """
-    تسجيل محاولة استخدام غير مصرح بها في الكونسول.
-    يطبع جميع المعلومات اللازمة لإضافة العميل لاحقاً.
-    """
     user = update.effective_user
     chat = update.effective_chat
 
@@ -225,11 +214,6 @@ def log_unauthorized(update: Update):
 
 
 async def handle_unauthorized(update: Update):
-    """
-    إرسال رسالة مناسبة للمستخدم غير المصرح له.
-    - الخاص: رسالة تفيد بأن الحساب غير مفعل
-    - المجموعة: رسالة تفيد بأن المجموعة غير مفعلة
-    """
     chat_type = update.effective_chat.type
 
     if chat_type == "private":
@@ -267,33 +251,35 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
     # ============================================================
-    # Knowledge Base Search
+    # Step 1: Try Knowledge Base first
     # ============================================================
     kb_result = knowledge.search(user_text)
 
     if kb_result.get("found"):
-        answer_parts = []
+        print(f"✅ Knowledge Base Found: {kb_result}")
 
+        # Build a clean answer from KB result
+        lines = []
         if kb_result.get("title"):
-            answer_parts.append(f"📌 {kb_result['title']}")
-
-        if kb_result.get("answer") and not kb_result.get("answer", "").startswith("http"):
-            answer_parts.append(kb_result["answer"])
-
+            lines.append(f"📌 {kb_result['title']}")
         if kb_result.get("url"):
-            answer_parts.append(f"🔗 {kb_result['url']}")
+            lines.append(f"🔗 {kb_result['url']}")
+        if kb_result.get("answer") and not kb_result.get("answer", "").startswith("http"):
+            lines.append(kb_result["answer"])
 
-        answer = "\n\n".join(answer_parts)
+        answer = "\n\n".join(lines)
 
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
 
         await update.message.reply_text(answer)
-        return
+        return  # Done, don't call Gemini
 
     # ============================================================
-    # Gemini Fallback
+    # Step 2: Fallback to Gemini
     # ============================================================
+    print("❌ Knowledge Base not found, calling Gemini...")
+
     history = memory.get_history(user_id)
 
     now = datetime.now(ZoneInfo("Asia/Riyadh"))
@@ -309,31 +295,19 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         hijri_year = 1446
 
     HIJRI_MONTHS = {
-        1: "محرم",
-        2: "صفر",
-        3: "ربيع الأول",
-        4: "ربيع الآخر",
-        5: "جمادى الأولى",
-        6: "جمادى الآخرة",
-        7: "رجب",
-        8: "شعبان",
-        9: "رمضان",
-        10: "شوال",
-        11: "ذو القعدة",
-        12: "ذو الحجة",
+        1: "محرم", 2: "صفر", 3: "ربيع الأول",
+        4: "ربيع الآخر", 5: "جمادى الأولى", 6: "جمادى الآخرة",
+        7: "رجب", 8: "شعبان", 9: "رمضان",
+        10: "شوال", 11: "ذو القعدة", 12: "ذو الحجة",
     }
 
     hijri_month_name = HIJRI_MONTHS.get(hijri_month, "محرم")
     hijri_date = f"{hijri_day} {hijri_month_name} {hijri_year} هـ"
 
     days = {
-        "Monday": "الاثنين",
-        "Tuesday": "الثلاثاء",
-        "Wednesday": "الأربعاء",
-        "Thursday": "الخميس",
-        "Friday": "الجمعة",
-        "Saturday": "السبت",
-        "Sunday": "الأحد",
+        "Monday": "الاثنين", "Tuesday": "الثلاثاء",
+        "Wednesday": "الأربعاء", "Thursday": "الخميس",
+        "Friday": "الجمعة", "Saturday": "السبت", "Sunday": "الأحد",
     }
 
     current_day = days.get(now.strftime("%A"), now.strftime("%A"))
