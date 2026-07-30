@@ -1,11 +1,24 @@
 """
-Provider Manager v9.0 - Ultra Fast & Smart
-==========================================
-- Gemini ultra-fast mode (temperature optimized)
-- Smart model selection based on query type
-- Auto-retry with exponential backoff
-- 4 API keys with rotation
-- Conversation history support
+Provider Manager v8.0 - Production Ready ✅
+طبقة إدارة موحدة لمزودات الذكاء الاصطناعي
+Thread-Safe | قابل للتوسع | إدارة نظيفة للموارد | دعم Conversation History
+
+التسلسل: Gemini (4 Keys) → Mistral → OpenRouter
+
+يعتمد على:
+    - google-genai (المكتبة الحديثة) — Client مستقل لكل مفتاح
+    - httpx
+    - python-dotenv
+
+الاستخدام:
+    from provider_manager import get_manager
+    manager = get_manager()
+    response = await manager.get_response(
+        system_prompt=SYSTEM_PROMPT,
+        history=history,        # List[Dict[str, str]]
+        user_prompt=user_text,
+    )
+    await manager.shutdown()
 """
 
 from __future__ import annotations
@@ -20,7 +33,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 
 # ============================================================
-# Configuration
+# الإعدادات العامة
 # ============================================================
 @dataclass(frozen=True)
 class Config:
@@ -47,8 +60,9 @@ class Config:
 
 config = Config()
 
+
 # ============================================================
-# Logger
+# التسجيل (Logger)
 # ============================================================
 logger = logging.getLogger("ProviderManager")
 logger.setLevel(logging.INFO)
@@ -61,23 +75,46 @@ if not logger.handlers:
     ))
     logger.addHandler(h)
 
-# ============================================================
-# Exceptions
-# ============================================================
-class ProviderError(Exception): pass
-class TemporaryProviderError(ProviderError): pass
-class PermanentProviderError(ProviderError): pass
-class QuotaExceededError(TemporaryProviderError): pass
-class RateLimitError(TemporaryProviderError): pass
-class ResourceExhaustedError(TemporaryProviderError): pass
-class ServiceUnavailableError(TemporaryProviderError): pass
-class NetworkError(TemporaryProviderError): pass
-class TimeoutError(NetworkError): pass
-class AuthenticationError(PermanentProviderError): pass
-class ContentFilteredError(PermanentProviderError): pass
 
 # ============================================================
-# Request Context
+# الاستثناءات
+# ============================================================
+class ProviderError(Exception):
+    pass
+
+class TemporaryProviderError(ProviderError):
+    pass
+
+class PermanentProviderError(ProviderError):
+    pass
+
+class QuotaExceededError(TemporaryProviderError):
+    pass
+
+class RateLimitError(TemporaryProviderError):
+    pass
+
+class ResourceExhaustedError(TemporaryProviderError):
+    pass
+
+class ServiceUnavailableError(TemporaryProviderError):
+    pass
+
+class NetworkError(TemporaryProviderError):
+    pass
+
+class TimeoutError(NetworkError):
+    pass
+
+class AuthenticationError(PermanentProviderError):
+    pass
+
+class ContentFilteredError(PermanentProviderError):
+    pass
+
+
+# ============================================================
+# سياق الطلب
 # ============================================================
 @dataclass
 class RequestContext:
@@ -96,8 +133,9 @@ class RequestContext:
     def elapsed_ms(self) -> float:
         return (time.time() - self.start_time) * 1000
 
+
 # ============================================================
-# Base Provider
+# مزود أساسي
 # ============================================================
 class BaseProvider(ABC):
     def __init__(self, name: str, model: str, priority: int = 0):
@@ -138,9 +176,11 @@ class BaseProvider(ABC):
                 raise
             except Exception as e:
                 last_error = TemporaryProviderError(str(e))
+
             if attempt < config.MAX_RETRIES:
                 delay = min(config.BASE_RETRY_DELAY * (2 ** attempt), config.MAX_RETRY_DELAY)
                 await asyncio.sleep(delay)
+
         raise last_error
 
     def get_key_label(self) -> str:
@@ -149,15 +189,21 @@ class BaseProvider(ABC):
     async def shutdown(self):
         pass
 
+
 # ============================================================
-# Gemini Provider (google-genai)
+# Gemini (google-genai - Client مستقل لكل مفتاح)
 # ============================================================
 class GeminiProvider(BaseProvider):
+    """
+    مزود Google Gemini مع 4 مفاتيح وتدوير تلقائي
+    يستخدم google-genai (Client مستقل لكل مفتاح - لا Global State)
+    """
+
     def __init__(self, api_keys: List[str]):
         super().__init__(name="Gemini", model=config.GEMINI_MODEL, priority=0)
         self._api_keys = [k.strip() for k in api_keys if k and k.strip()]
         if not self._api_keys:
-            raise ValueError("No valid Gemini API keys")
+            raise ValueError("لا توجد مفاتيح Gemini صالحة")
         self._current_index = 0
         self._key_cooldowns: Dict[int, float] = {}
         self._lock = asyncio.Lock()
@@ -189,7 +235,7 @@ class GeminiProvider(BaseProvider):
         self._clean_cooldowns()
         available = [i for i in range(len(self._api_keys)) if i not in self._key_cooldowns]
         if not available:
-            raise ResourceExhaustedError("All Gemini keys in cooldown")
+            raise ResourceExhaustedError("كل مفاتيح Gemini في تهدئة")
 
         last_error = None
         for key_index in available:
@@ -212,35 +258,35 @@ class GeminiProvider(BaseProvider):
             except PermanentProviderError:
                 raise
 
-        raise last_error or ResourceExhaustedError("All Gemini keys failed")
+        raise last_error or ResourceExhaustedError("فشلت كل مفاتيح Gemini")
 
     def _build_contents(self, ctx: RequestContext) -> list:
-        """Build conversation contents with system prompt as first message."""
+        """بناء محتوى المحادثة مع التاريخ لـ Gemini"""
         contents = []
-        
-        # Add system prompt as first user message
-        contents.append({
-            "role": "user",
-            "parts": [{"text": ctx.system_prompt}],
-        })
-        contents.append({
-            "role": "model",
-            "parts": [{"text": "تم الفهم. سأجيب وفق هذه التعليمات."}],
-        })
 
-        # Add conversation history
         for message in ctx.history:
             role = message.get("role", "user")
             text = message.get("content", "")
+
             if not text:
                 continue
-            if role == "assistant":
-                contents.append({"role": "model", "parts": [{"text": text}]})
-            else:
-                contents.append({"role": "user", "parts": [{"text": text}]})
 
-        # Add current user message
-        contents.append({"role": "user", "parts": [{"text": ctx.user_prompt}]})
+            if role == "assistant":
+                contents.append({
+                    "role": "model",
+                    "parts": [{"text": text}],
+                })
+            else:
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": text}],
+                })
+
+        # إضافة رسالة المستخدم الحالية
+        contents.append({
+            "role": "user",
+            "parts": [{"text": ctx.user_prompt}],
+        })
 
         return contents
 
@@ -251,9 +297,10 @@ class GeminiProvider(BaseProvider):
                 model=self.model,
                 contents=self._build_contents(ctx),
                 config={
-                    "temperature": 0.9,
+                    "system_instruction": ctx.system_prompt,
+                    "temperature": 0.7,
                     "top_p": 0.95,
-                    "top_k": 60,
+                    "top_k": 40,
                     "max_output_tokens": 8192,
                 },
             )
@@ -263,12 +310,12 @@ class GeminiProvider(BaseProvider):
         if not response.candidates:
             if response.prompt_feedback and response.prompt_feedback.block_reason:
                 raise ContentFilteredError(str(response.prompt_feedback.block_reason))
-            raise TemporaryProviderError("Empty response")
+            raise TemporaryProviderError("استجابة فارغة")
 
         try:
             return response.text
         except ValueError:
-            raise ContentFilteredError("Cannot extract text")
+            raise ContentFilteredError("تعذر استخراج النص")
 
     def _classify_error(self, error: Exception):
         msg = str(error).lower()
@@ -290,8 +337,9 @@ class GeminiProvider(BaseProvider):
             raise ContentFilteredError(str(error))
         raise TemporaryProviderError(str(error))
 
+
 # ============================================================
-# HTTP Provider (Mistral + OpenRouter)
+# مزود HTTP عام (Mistral + OpenRouter)
 # ============================================================
 class HttpProvider(BaseProvider):
     def __init__(self, name: str, model: str, api_key: str, base_url: str, priority: int = 0):
@@ -316,9 +364,23 @@ class HttpProvider(BaseProvider):
         return self._client
 
     def _build_messages(self, ctx: RequestContext) -> list:
-        messages = [{"role": "system", "content": ctx.system_prompt}]
+        """بناء رسائل المحادثة مع التاريخ لـ Mistral/OpenRouter"""
+        messages = [
+            {
+                "role": "system",
+                "content": ctx.system_prompt,
+            }
+        ]
+
+        # إضافة التاريخ
         messages.extend(ctx.history)
-        messages.append({"role": "user", "content": ctx.user_prompt})
+
+        # إضافة رسالة المستخدم الحالية
+        messages.append({
+            "role": "user",
+            "content": ctx.user_prompt,
+        })
+
         return messages
 
     async def _call_api(self, ctx: RequestContext) -> str:
@@ -330,7 +392,7 @@ class HttpProvider(BaseProvider):
                 json={
                     "model": self.model,
                     "messages": self._build_messages(ctx),
-                    "temperature": 0.9,
+                    "temperature": 0.7,
                     "max_tokens": 8192,
                 },
             )
@@ -345,16 +407,20 @@ class HttpProvider(BaseProvider):
 
     def _classify_http_error(self, error: "httpx.HTTPStatusError") -> None:
         s = error.response.status_code
-        if s == 429: raise RateLimitError(f"{self.name}: 429")
-        if s in (500, 502, 503, 504): raise ServiceUnavailableError(f"{self.name}: {s}")
-        if s in (401, 403): raise AuthenticationError(f"{self.name}: {s}")
+        if s == 429:
+            raise RateLimitError(f"{self.name}: 429")
+        if s in (500, 502, 503, 504):
+            raise ServiceUnavailableError(f"{self.name}: {s}")
+        if s in (401, 403):
+            raise AuthenticationError(f"{self.name}: {s}")
         raise TemporaryProviderError(f"{self.name}: HTTP {s}")
 
     async def shutdown(self) -> None:
         if self._client is not None:
             await self._client.aclose()
             self._client = None
-            logger.info(f"[{self.name}] AsyncClient closed")
+            logger.info(f"[{self.name}] تم إغلاق AsyncClient")
+
 
 # ============================================================
 # Mistral
@@ -362,11 +428,13 @@ class HttpProvider(BaseProvider):
 class MistralProvider(HttpProvider):
     def __init__(self, api_key: str):
         super().__init__(
-            name="Mistral", model=config.MISTRAL_MODEL,
+            name="Mistral",
+            model=config.MISTRAL_MODEL,
             api_key=api_key,
             base_url="https://api.mistral.ai/v1/chat/completions",
             priority=1
         )
+
 
 # ============================================================
 # OpenRouter
@@ -374,14 +442,16 @@ class MistralProvider(HttpProvider):
 class OpenRouterProvider(HttpProvider):
     def __init__(self, api_key: str):
         super().__init__(
-            name="OpenRouter", model=config.OPENROUTER_MODEL,
+            name="OpenRouter",
+            model=config.OPENROUTER_MODEL,
             api_key=api_key,
             base_url="https://openrouter.ai/api/v1/chat/completions",
             priority=2
         )
 
+
 # ============================================================
-# Provider Manager (Singleton)
+# ProviderManager (Singleton)
 # ============================================================
 class ProviderManager:
     _instance: Optional["ProviderManager"] = None
@@ -399,25 +469,30 @@ class ProviderManager:
         self._load_providers()
         self._providers.sort(key=lambda p: p.priority)
         self._initialized = True
-        logger.info(f"Loaded {len(self._providers)} providers")
+
+        logger.info(f"تم تحميل {len(self._providers)} مزودات")
         for i, p in enumerate(self._providers):
-            logger.info(f"  {i+1}. {p.name} | {p.model}")
+            logger.info(f"  {i+1}. {p.name} | {p.model} | priority={p.priority}")
 
     def _load_providers(self) -> None:
         keys = []
         for name in config.GEMINI_KEYS:
             v = os.getenv(name, "").strip()
-            if v: keys.append(v)
+            if v:
+                keys.append(v)
         if keys:
             self._providers.append(GeminiProvider(keys))
+
         mk = os.getenv(config.MISTRAL_KEY, "").strip()
         if mk:
             self._providers.append(MistralProvider(mk))
+
         ok = os.getenv(config.OPENROUTER_KEY, "").strip()
         if ok:
             self._providers.append(OpenRouterProvider(ok))
+
         if not self._providers:
-            raise RuntimeError("No providers loaded")
+            raise RuntimeError("لم يتم تحميل أي مزود")
 
     def add_provider(self, provider: BaseProvider) -> None:
         self._providers.append(provider)
@@ -433,6 +508,12 @@ class ProviderManager:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             history=history or [],
+        )
+        logger.info(
+            f"[{ctx.request_id}] طلب | "
+            f"sys:{len(system_prompt)} "
+            f"user:{len(user_prompt)} "
+            f"history:{len(ctx.history)}"
         )
 
         for p in self._providers:
@@ -451,29 +532,39 @@ class ProviderManager:
             try:
                 result = await provider.generate(ctx)
                 dt = (time.time() - t0) * 1000
-                logger.info(f"[{ctx.request_id}] OK | {provider.name} | {dt:.0f}ms")
+                logger.info(
+                    f"[{ctx.request_id}] OK | {provider.name} | "
+                    f"{provider.model} | {ctx.key_label} | "
+                    f"attempts={ctx.attempts} | {dt:.0f}ms"
+                )
                 return result
             except TemporaryProviderError as e:
+                dt = (time.time() - t0) * 1000
                 ctx.errors.append(f"{provider.name}: {e}")
-                logger.warning(f"[{ctx.request_id}] TEMP | {provider.name}: {e}")
+                logger.warning(f"[{ctx.request_id}] TEMP | {provider.name}: {e} | {dt:.0f}ms")
                 if not isinstance(provider, GeminiProvider):
                     provider.set_cooldown()
             except PermanentProviderError as e:
+                dt = (time.time() - t0) * 1000
                 ctx.errors.append(f"{provider.name}: {e}")
-                logger.error(f"[{ctx.request_id}] PERM | {provider.name}: {e}")
+                logger.error(f"[{ctx.request_id}] PERM | {provider.name}: {e} | {dt:.0f}ms")
             except Exception as e:
+                dt = (time.time() - t0) * 1000
                 ctx.errors.append(f"{provider.name}: {e}")
-                logger.error(f"[{ctx.request_id}] ERR | {provider.name}: {e}")
+                logger.error(f"[{ctx.request_id}] ERR | {provider.name}: {e} | {dt:.0f}ms")
 
-        logger.error(f"[{ctx.request_id}] FAIL | {'; '.join(ctx.errors)}")
+        logger.error(f"[{ctx.request_id}] FAIL | " + "; ".join(ctx.errors))
         return config.FALLBACK_MESSAGE
 
     async def shutdown(self) -> None:
+        logger.info("جاري إغلاق جميع المزودات...")
         for provider in self._providers:
             await provider.shutdown()
+        logger.info("تم إغلاق جميع المزودات")
+
 
 # ============================================================
-# Helper
+# helper
 # ============================================================
 def get_manager() -> ProviderManager:
     return ProviderManager()
