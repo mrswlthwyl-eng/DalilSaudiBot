@@ -228,34 +228,6 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
     # ============================================================
-    # ✅ فحص: إذا المستخدم كتب اسم جامعة فقط بدون سؤال
-    # ============================================================
-    words = user_text.strip().split()
-    university_id = knowledge.find_university(user_text)
-
-    if university_id and len(words) <= 4:
-        # تأكد إنه ما فيه أي كلمة سؤال
-        question_words = {
-            "متى", "وين", "اين", "كيف", "كم", "ايش", "شنو", "ما", "هل",
-            "عطني", "اعطني", "اريد", "ابي", "ابغى", "بغيت",
-            "ممكن", "يفيد", "تقدر", "عندك", "تعرف", "رابط", "رقم",
-        }
-        if not any(qw in words for qw in question_words):
-            uni_data = knowledge.get_university_data(university_id)
-            if uni_data:
-                uni_name = uni_data.get("name", "الجامعة")
-                await update.message.reply_text(
-                    f"نعم، {uni_name}. تفضل، وش تحب تعرف عنها؟\n\n"
-                    f"أقدر أساعدك في:\n"
-                    f"• الكليات والتخصصات\n"
-                    f"• العمادات والخدمات\n"
-                    f"• القبول والتسجيل\n"
-                    f"• التدريب التطبيقي\n"
-                    f"• أي سؤال آخر"
-                )
-                return
-
-    # ============================================================
     # STEP 1: Knowledge Base (MUST run first)
     # ============================================================
     kb_result = knowledge.search(user_text)
@@ -327,13 +299,7 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ==============================
 """
 
-    # ✅ إذا في جامعة محددة، أضف سياقها لـ AI
     system_prompt = SYSTEM_PROMPT + "\n\n" + current_time_context
-
-    if university_id:
-        uni_context = knowledge.get_university_context_for_ai(university_id)
-        if uni_context:
-            system_prompt += "\n\n" + uni_context
 
     try:
         answer = await provider.get_response(
