@@ -34,7 +34,7 @@ ALLOWED_USERS = {
 }
 
 # ============================================================
-# System Prompt
+# System Prompt - Complete University Knowledge
 # ============================================================
 SYSTEM_PROMPT = """  أنت "دليلك الجامعي"، مساعد جامعي ذكي ومتخصص في الجامعات السعودية والحياة الجامعية
 
@@ -1127,7 +1127,43 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = update.effective_user.id
-    user_text = update.message.text
+    user_text = update.message.text.strip()
+
+    # ============================================================
+    # فلتر الردود - البوت يرد في حالتين فقط
+    # ============================================================
+    
+    # قائمة التحيات
+    greeting_words = [
+        "السلام عليكم", "وعليكم السلام", "سلام", "هلا", "اهلا", "مرحبا",
+        "صباح الخير", "صباح النور", "مساء الخير", "مساء النور",
+        "ياهلا", "حياك", "حياكم", "hello", "hi", "hey"
+    ]
+    is_greeting = any(g in user_text.lower() for g in greeting_words)
+    has_keyword = "دليلي" in user_text
+    
+    # تجاهل إذا مو تحية ومافيه دليلي
+    if not is_greeting and not has_keyword:
+        return
+    
+    # رد على التحية فقط
+    if is_greeting and not has_keyword:
+        if "السلام" in user_text:
+            await update.message.reply_text("وعليكم السلام ورحمة الله وبركاته")
+        elif "صباح" in user_text:
+            await update.message.reply_text("صباح النور")
+        elif "مساء" in user_text:
+            await update.message.reply_text("مساء النور")
+        else:
+            await update.message.reply_text("أهلاً وسهلاً")
+        return
+
+    # حذف كلمة "دليلي" من النص
+    user_text = user_text.replace("دليلي", "").strip()
+    
+    if not user_text:
+        await update.message.reply_text("تفضل، كيف أقدر أساعدك؟")
+        return
 
     # ============================================================
     # STEP 1: Knowledge Base (MUST run first)
@@ -1157,7 +1193,7 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         memory.add_user_message(user_id, user_text)
         memory.add_assistant_message(user_id, answer)
         await update.message.reply_text(answer)
-        return  # ← IMPORTANT: Stop here, do NOT call AI
+        return
 
     # ============================================================
     # STEP 2: AI Fallback (only if KB found nothing)
