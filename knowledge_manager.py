@@ -1,9 +1,9 @@
 """
-Knowledge Manager v7.0 - Complete Integration
-=============================================
-- Full KB + AI integration
-- "جامعة" alone triggers clarification
-- Deep link search for enriched AI responses
+Knowledge Manager v7.1 - Fixed MIN_SCORE + Title
+================================================
+- MIN_SCORE raised to 50
+- Better title handling
+- Falls back to AI for weak matches
 """
 
 import json
@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Any, Tuple, Set
 
 class KnowledgeManager:
 
-    MIN_SCORE = 25
+    MIN_SCORE = 50  # ✅ Raised from 25
     MAX_RESULTS = 20
     MAX_CACHE_SIZE = 1000
     DEBUG = False
@@ -85,7 +85,6 @@ class KnowledgeManager:
         "hello", "hi", "hey",
     }
 
-    # كلمات توحي بأن المستخدم يريد معرفة شيء محدد
     QUESTION_WORDS = {
         "متى", "وين", "اين", "كيف", "كم", "ايش", "شنو", "ما", "هل",
         "عطني", "اعطني", "اريد", "ابي", "ابغى", "بغيت",
@@ -123,14 +122,11 @@ class KnowledgeManager:
         return False
 
     def is_just_university_name(self, text: str) -> bool:
-        """Check if the user just said a university name without a question."""
         normalized = self.normalize(text)
         words = normalized.split()
-        # If text is very short and matches a university alias
         if len(words) <= 4:
             for alias in self._aliases_map:
                 if alias and alias in normalized:
-                    # Check if there's no question word
                     if not any(qw in words for qw in self.QUESTION_WORDS):
                         return True
         return False
@@ -164,8 +160,7 @@ class KnowledgeManager:
             except Exception as e:
                 print(f"⚠️  Error loading {file_path.name}: {e}")
         self._loaded = True
-        print(f"✅ Knowledge Manager loaded {len(self._cache)} universities "
-              f"with {len(self._aliases_map)} aliases.")
+        print(f"✅ Knowledge Manager loaded {len(self._cache)} universities with {len(self._aliases_map)} aliases.")
 
     def _collect_item_aliases(self, university_id: str, data: Any) -> None:
         if university_id not in self._item_aliases:
@@ -205,120 +200,29 @@ class KnowledgeManager:
         return self._cache.get(university_id)
 
     def get_university_context_for_ai(self, university_id: str) -> str:
-        """
-        Build a rich context string about a university to pass to AI.
-        Includes key links, colleges, deanships, contact info, etc.
-        """
         data = self._cache.get(university_id)
         if not data:
             return ""
-
         parts = []
         name = data.get("name", "")
         city = data.get("city", "")
         website = data.get("info", {}).get("website", "")
         phone = data.get("contact", {}).get("phone", "")
         email = data.get("contact", {}).get("email", "")
-
         parts.append(f"الجامعة: {name}")
-        if city:
-            parts.append(f"المدينة: {city}")
-        if website:
-            parts.append(f"الموقع الرسمي: {website}")
-        if phone:
-            parts.append(f"رقم الهاتف: {phone}")
-        if email:
-            parts.append(f"البريد الإلكتروني: {email}")
-
-        # Colleges
+        if city: parts.append(f"المدينة: {city}")
+        if website: parts.append(f"الموقع الرسمي: {website}")
+        if phone: parts.append(f"رقم الهاتف: {phone}")
+        if email: parts.append(f"البريد الإلكتروني: {email}")
         colleges = data.get("colleges", [])
         if colleges:
             college_names = [c.get("name", "") for c in colleges if c.get("name")]
-            if college_names:
-                parts.append(f"الكليات: {', '.join(college_names)}")
-
-        # Deanships
+            if college_names: parts.append(f"الكليات: {', '.join(college_names)}")
         deanships = data.get("deanships", [])
         if deanships:
             deanship_names = [d.get("name", "") for d in deanships if d.get("name")]
-            if deanship_names:
-                parts.append(f"العمادات: {', '.join(deanship_names)}")
-
-        # Electronic services
-        services = data.get("electronic_services", {})
-        if services:
-            service_items = [k for k, v in services.items() if v]
-            if service_items:
-                parts.append(f"الخدمات الإلكترونية المتوفرة: {', '.join(service_items)}")
-
-        # Telegram channels
-        telegram = data.get("telegram", {})
-        channels = telegram.get("channels", [])
-        if channels:
-            official_channels = [c for c in channels if c.get("type") == "official"]
-            if official_channels:
-                channel_info = [f"{c.get('name', '')} ({c.get('url', '')})" for c in official_channels]
-                parts.append(f"قنوات تيليجرام الرسمية: {'; '.join(channel_info)}")
-
+            if deanship_names: parts.append(f"العمادات: {', '.join(deanship_names)}")
         return "\n".join(parts)
-
-    def get_all_links(self, university_id: str) -> List[dict]:
-        """Extract all important links for a university to help AI answer questions."""
-        data = self._cache.get(university_id)
-        if not data:
-            return []
-
-        links = []
-
-        # Info links
-        info = data.get("info", {})
-        for key, url in info.items():
-            if url and url.startswith("http"):
-                links.append({"title": key.replace("_", " ").title(), "url": url, "section": "info"})
-
-        # Colleges
-        for item in data.get("colleges", []):
-            if item.get("url"):
-                links.append({"title": item.get("name", ""), "url": item["url"], "section": "colleges"})
-
-        # Deanships
-        for item in data.get("deanships", []):
-            if item.get("url"):
-                links.append({"title": item.get("name", ""), "url": item["url"], "section": "deanships"})
-
-        # Electronic services
-        for key, url in data.get("electronic_services", {}).items():
-            if url and url.startswith("http"):
-                links.append({"title": key.replace("_", " ").title(), "url": url, "section": "electronic_services"})
-
-        # Programs
-        for key, url in data.get("programs", {}).items():
-            if url and url.startswith("http"):
-                links.append({"title": key.replace("_", " ").title(), "url": url, "section": "programs"})
-
-        # Calendar
-        for key, url in data.get("calendar", {}).items():
-            if url and url.startswith("http"):
-                links.append({"title": key.replace("_", " ").title(), "url": url, "section": "calendar"})
-
-        # Telegram channels
-        for item in data.get("telegram", {}).get("channels", []):
-            if item.get("url"):
-                links.append({"title": item.get("name", ""), "url": item["url"], "section": "telegram"})
-
-        # Admission
-        for key, url in data.get("admission", {}).items():
-            if url and url.startswith("http"):
-                links.append({"title": key.replace("_", " ").title(), "url": url, "section": "admission"})
-
-        # Contact
-        contact = data.get("contact", {})
-        if contact.get("phone"):
-            links.append({"title": "رقم الهاتف", "url": f"tel:{contact['phone']}", "section": "contact"})
-        if contact.get("email"):
-            links.append({"title": "البريد الإلكتروني", "url": f"mailto:{contact['email']}", "section": "contact"})
-
-        return links
 
     def _detect_intent(self, query_words: List[str]) -> Tuple[Optional[List[str]], int]:
         for word in query_words:
@@ -338,55 +242,40 @@ class KnowledgeManager:
                     query = query.replace(alias, "")
                     break
         stop_words = {
-            "في", "عن", "ما", "هو", "هي", "هل", "وين", "اين", "ابي", "ابي",
+            "في", "عن", "ما", "هو", "هي", "هل", "وين", "اين", "ابي",
             "عطني", "اريد", "اريد", "بخصوص", "شنو", "ايش", "كيف", "متى",
             "لو", "سمحت", "تكفي", "تكفون", "ممكن", "بغيت", "ابغى", "ابغي",
-            "the", "is", "of", "in", "for", "what", "where", "how", "a", "an",
         }
-        words = [
-            w.strip()
-            for w in query.split()
-            if len(w.strip()) > 1 and w.strip() not in stop_words
-        ]
+        words = [w.strip() for w in query.split() if len(w.strip()) > 1 and w.strip() not in stop_words]
         return words if words else []
 
     def _is_content_item(self, item: dict) -> bool:
         return bool(set(item.keys()) & self.CONTENT_KEYS)
 
     def _score_match(self, query_words: List[str], text: str) -> int:
-        if not text:
-            return 0
+        if not text: return 0
         text_norm = self.normalize(text)
         text_words = set(text_norm.split())
         score = 0
         full_phrase = " ".join(query_words)
-        if full_phrase in text_norm:
-            score += 20
+        if full_phrase in text_norm: score += 20
         for qw in query_words:
-            if qw in text_words:
-                score += 10
-            elif any(qw in tw for tw in text_words):
-                score += 5
-            elif any(tw in qw for tw in text_words):
-                score += 3
+            if qw in text_words: score += 10
+            elif any(qw in tw for tw in text_words): score += 5
+            elif any(tw in qw for tw in text_words): score += 3
         return score
 
     def _score_dict(self, query_words: List[str], item: dict) -> int:
         score = 0
         for key, value in item.items():
-            if key in ("id", "score", "_"):
-                continue
+            if key in ("id", "score", "_"): continue
             weight = self.FIELD_WEIGHTS.get(key, 1)
-            if isinstance(value, str):
-                score += self._score_match(query_words, value) * weight
+            if isinstance(value, str): score += self._score_match(query_words, value) * weight
             elif isinstance(value, list):
                 for v in value:
-                    if isinstance(v, str):
-                        score += self._score_match(query_words, v) * weight
-                    elif isinstance(v, dict):
-                        score += self._score_dict(query_words, v)
-            elif isinstance(value, dict):
-                score += self._score_dict(query_words, value)
+                    if isinstance(v, str): score += self._score_match(query_words, v) * weight
+                    elif isinstance(v, dict): score += self._score_dict(query_words, v)
+            elif isinstance(value, dict): score += self._score_dict(query_words, value)
         return score
 
     def _get_section_bonus(self, section_key: str) -> int:
@@ -397,8 +286,7 @@ class KnowledgeManager:
         return (university_id, self.normalize(user_text))
 
     def _set_cache(self, key: Tuple[str, str], value: dict) -> None:
-        if len(self._search_cache) >= self.MAX_CACHE_SIZE:
-            self._search_cache.popitem(last=False)
+        if len(self._search_cache) >= self.MAX_CACHE_SIZE: self._search_cache.popitem(last=False)
         self._search_cache[key] = value
 
     def _get_cache(self, key: Tuple[str, str]) -> Optional[dict]:
@@ -411,50 +299,36 @@ class KnowledgeManager:
     # Main Search
     # ============================================================
     def search(self, user_text: str) -> dict:
-        if not self._loaded:
-            return {"found": False}
-        if self.is_greeting(user_text):
-            return {"found": False, "is_greeting": True}
+        if not self._loaded: return {"found": False}
+        if self.is_greeting(user_text): return {"found": False, "is_greeting": True}
 
         university_id = self.find_university(user_text)
+        if not university_id: return {"found": False}
 
-        # ✅ إذا الجامعة مو موجودة → نرجع found=False → AI
-        if not university_id:
-            return {"found": False}
-
-        # ✅ إذا المستخدم ذكر اسم الجامعة فقط بدون سؤال → نحتاج توضيح
         if self.is_just_university_name(user_text):
             uni_data = self._cache.get(university_id, {})
             uni_name = uni_data.get("name", "الجامعة")
             return {
-                "found": True,
-                "is_just_name": True,
-                "university": uni_name,
-                "university_id": university_id,
+                "found": True, "is_just_name": True,
+                "university": uni_name, "university_id": university_id,
                 "title": uni_name,
                 "answer": f"نعم، {uni_name}. تفضل، وش تحب تعرف عنها؟\n\nأقدر أساعدك في:\n• الكليات والتخصصات\n• العمادات والخدمات\n• القبول والتسجيل\n• التدريب التطبيقي\n• أي سؤال آخر",
-                "url": uni_data.get("info", {}).get("website", ""),
-                "section": "greeting",
+                "url": uni_data.get("info", {}).get("website", ""), "section": "greeting",
             }
 
         ck = self._cache_key(university_id, user_text)
         cached = self._get_cache(ck)
-        if cached is not None:
-            return cached
+        if cached is not None: return cached
 
         university_data = self._cache.get(university_id)
-        if not university_data:
-            return {"found": False}
+        if not university_data: return {"found": False}
 
         query_words = self._clean_query(user_text, university_id)
         if not query_words or all(len(w) < 2 for w in query_words):
-            result = {"found": False}
-            self._set_cache(ck, result)
-            return result
+            result = {"found": False}; self._set_cache(ck, result); return result
 
         target_sections, intent_bonus = self._detect_intent(query_words)
 
-        # General info
         if target_sections == ["__info__"]:
             info_data = university_data.get("info", {})
             description = info_data.get("description") or info_data.get("about") or ""
@@ -464,34 +338,11 @@ class KnowledgeManager:
                 website = info_data.get("website", "")
                 description = f"{name} في {city}. الموقع: {website}"
             result = {
-                "found": True,
-                "title": university_data.get("name", ""),
-                "answer": description,
-                "url": info_data.get("website", ""),
-                "section": "info",
-                "university": university_data.get("name", university_id),
-                "score": 100,
+                "found": True, "title": university_data.get("name", ""),
+                "answer": description, "url": info_data.get("website", ""),
+                "section": "info", "university": university_data.get("name", university_id), "score": 100,
             }
-            self._set_cache(ck, result)
-            return result
-
-        # All links
-        if target_sections == ["__links__"]:
-            all_links = self.get_all_links(university_id)
-            if all_links:
-                links_text = "\n".join([f"• {l['title']}: {l['url']}" for l in all_links[:10]])
-                result = {
-                    "found": True,
-                    "title": f"روابط {university_data.get('name', '')}",
-                    "answer": links_text,
-                    "url": university_data.get("info", {}).get("website", ""),
-                    "section": "links",
-                    "university": university_data.get("name", university_id),
-                    "all_links": all_links,
-                    "score": 100,
-                }
-                self._set_cache(ck, result)
-                return result
+            self._set_cache(ck, result); return result
 
         all_results: List[Tuple[int, dict]] = []
         scored_ids: Set[int] = set()
@@ -499,24 +350,19 @@ class KnowledgeManager:
         if target_sections:
             for section_key in target_sections:
                 if section_key in university_data:
-                    section_data = university_data[section_key]
-                    self._deep_search_scored(query_words, section_data, section_key, all_results, scored_ids)
+                    self._deep_search_scored(query_words, university_data[section_key], section_key, all_results, scored_ids)
             all_results = [(s + intent_bonus, r) for s, r in all_results]
         else:
             self._deep_search_scored(query_words, university_data, "", all_results, scored_ids)
 
         if not all_results:
-            result = {"found": False}
-            self._set_cache(ck, result)
-            return result
+            result = {"found": False}; self._set_cache(ck, result); return result
 
         seen = set()
         unique_results = []
         for score, result in all_results:
             key = (result.get("section", ""), result.get("title", ""), result.get("url", ""))
-            if key not in seen:
-                seen.add(key)
-                unique_results.append((score, result))
+            if key not in seen: seen.add(key); unique_results.append((score, result))
 
         all_results = unique_results
         all_results.sort(key=lambda x: x[0], reverse=True)
@@ -525,13 +371,10 @@ class KnowledgeManager:
         best_score, best_result = all_results[0]
 
         if best_score < self.MIN_SCORE:
-            result = {"found": False}
-            self._set_cache(ck, result)
-            return result
+            result = {"found": False}; self._set_cache(ck, result); return result
 
         best_result["university"] = university_data.get("name", university_id)
         best_result["score"] = best_score
-
         self._set_cache(ck, best_result)
         return best_result
 
@@ -550,17 +393,14 @@ class KnowledgeManager:
                 scored_ids.add(item_id)
                 self._process_keywords(query_words, kw_data, data, results, scored_ids)
             for key, value in data.items():
-                if key in ("id",):
-                    continue
+                if key in ("id",): continue
                 new_path = f"{path}/{key}" if path else key
                 self._deep_search_scored(query_words, value, new_path, results, scored_ids)
         elif isinstance(data, list):
-            for item in data:
-                self._deep_search_scored(query_words, item, path, results, scored_ids)
+            for item in data: self._deep_search_scored(query_words, item, path, results, scored_ids)
         elif isinstance(data, str) and data:
             score = self._score_match(query_words, data)
-            if score > 0:
-                results.append((score, self._string_to_result(path, data)))
+            if score > 0: results.append((score, self._string_to_result(path, data)))
 
     def _process_keywords(self, query_words, kw_data, parent_data, results, scored_ids):
         if isinstance(kw_data, dict):
@@ -579,8 +419,7 @@ class KnowledgeManager:
     def _score_related_sections(self, query_words, parent_data, results, scored_ids):
         skip_keys = {"id", "aliases", "keywords", "name", "short_name", "city", "type"}
         for section_key, section_value in parent_data.items():
-            if section_key in skip_keys:
-                continue
+            if section_key in skip_keys: continue
             if isinstance(section_value, list):
                 for item in section_value:
                     if isinstance(item, dict) and id(item) not in scored_ids:
@@ -595,13 +434,17 @@ class KnowledgeManager:
         title = (
             item.get("name") or item.get("title") or item.get("question")
             or item.get("channel") or item.get("username")
-            or item.get("company") or item.get("position") or fallback
+            or item.get("company") or item.get("position")
+            or item.get("description")  # ✅ Added
+            or fallback
         )
+        # ✅ If title is still a technical key, use description
+        if not title or title == fallback:
+            title = item.get("description") or fallback.replace("_", " ").title()
         url = item.get("url", "")
         description = item.get("description", "") or item.get("answer", "")
         answer = description if description and not description.startswith("http") else ""
-        if not answer:
-            answer = url
+        if not answer: answer = url
         return {"found": True, "section": fallback, "title": title, "answer": answer, "url": url}
 
     def _string_to_result(self, key: str, value: str) -> dict:
@@ -616,8 +459,7 @@ class KnowledgeManager:
 
     def get_section(self, university_id: str, section: str) -> Optional[Any]:
         data = self._cache.get(university_id)
-        if data:
-            return data.get(section)
+        if data: return data.get(section)
         return None
 
     def list_universities(self) -> List[Dict[str, str]]:
