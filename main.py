@@ -1175,25 +1175,39 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"🔍 KB    : found={kb_result.get('found')}")
 
     if kb_result.get("found"):
-        print(f"✅ KB MATCH!")
-        print(f"   Title : {kb_result.get('title')}")
-        print(f"   URL   : {kb_result.get('url')}")
-        print("=" * 40)
+        score = kb_result.get("score", 0)
+        title = kb_result.get("title", "")
+        
+        # ✅ تجاهل النتائج العامة والضعيفة
+        bad_titles = [
+            "kfu_training_knowledge", "kfu_external_opportunities",
+            "kfu_specific_info", "training_knowledge", "قاعدة معرفة"
+        ]
+        is_bad = any(bad in title for bad in bad_titles)
+        
+        if score >= 50 and not is_bad:
+            print(f"✅ KB MATCH!")
+            print(f"   Title : {kb_result.get('title')}")
+            print(f"   URL   : {kb_result.get('url')}")
+            print(f"   Score : {score}")
+            print("=" * 40)
 
-        lines = []
-        if kb_result.get("title"):
-            lines.append(f"📌 {kb_result['title']}")
-        if kb_result.get("url"):
-            lines.append(f"🔗 {kb_result['url']}")
-        if kb_result.get("answer") and not kb_result.get("answer", "").startswith("http"):
-            lines.append(kb_result["answer"])
+            lines = []
+            if kb_result.get("title"):
+                lines.append(f"📌 {kb_result['title']}")
+            if kb_result.get("url"):
+                lines.append(f"🔗 {kb_result['url']}")
+            if kb_result.get("answer") and not kb_result.get("answer", "").startswith("http"):
+                lines.append(kb_result["answer"])
 
-        answer = "\n\n".join(lines)
+            answer = "\n\n".join(lines)
 
-        memory.add_user_message(user_id, user_text)
-        memory.add_assistant_message(user_id, answer)
-        await update.message.reply_text(answer)
-        return
+            memory.add_user_message(user_id, user_text)
+            memory.add_assistant_message(user_id, answer)
+            await update.message.reply_text(answer)
+            return
+        else:
+            print(f"⚠️ KB ignored (score={score}, title={title})")
 
     # ============================================================
     # STEP 2: AI Fallback (only if KB found nothing)
@@ -1238,6 +1252,13 @@ async def reply_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
 
     system_prompt = SYSTEM_PROMPT + "\n\n" + current_time_context
+
+    # ✅ أضف سياق الجامعة إذا عرفها البوت
+    university_id = knowledge.find_university(user_text)
+    if university_id:
+        uni_context = knowledge.get_university_context_for_ai(university_id)
+        if uni_context:
+            system_prompt += "\n\n" + uni_context
 
     try:
         answer = await provider.get_response(
