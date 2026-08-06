@@ -1,9 +1,10 @@
 """
-Knowledge Manager v7.1 - Fixed MIN_SCORE + Title
+Knowledge Manager v7.2 - Block Generic Sections
 ================================================
-- MIN_SCORE raised to 50
+- MIN_SCORE = 50
+- Blocks kfu_training_knowledge, kfu_external_opportunities, kfu_specific_info
 - Better title handling
-- Falls back to AI for weak matches
+- Falls back to AI for weak/generic matches
 """
 
 import json
@@ -15,10 +16,17 @@ from typing import Dict, List, Optional, Any, Tuple, Set
 
 class KnowledgeManager:
 
-    MIN_SCORE = 50  # ✅ Raised from 25
+    MIN_SCORE = 50
     MAX_RESULTS = 20
     MAX_CACHE_SIZE = 1000
     DEBUG = False
+
+    # Sections to block from appearing in results
+    BLOCKED_SECTIONS = {
+        "kfu_training_knowledge",
+        "kfu_external_opportunities",
+        "kfu_specific_info",
+    }
 
     FIELD_WEIGHTS = {
         "name": 5, "title": 5, "question": 5, "answer": 5,
@@ -378,29 +386,45 @@ class KnowledgeManager:
         self._set_cache(ck, best_result)
         return best_result
 
+    # ============================================================
+    # Deep Search
+    # ============================================================
     def _deep_search_scored(self, query_words, data, path, results, scored_ids):
         if isinstance(data, dict):
             item_id = id(data)
+            
+            # ✅ Check if this section should be blocked
+            section_name = path.split("/")[-1] if "/" in path else path
+            
             if path and self._is_content_item(data) and item_id not in scored_ids:
-                scored_ids.add(item_id)
-                score = self._score_dict(query_words, data)
-                if score > 0:
-                    section_key = path.split("/")[-1] if "/" in path else path
-                    score += self._get_section_bonus(section_key)
-                    results.append((score, self._item_to_result(path, data)))
+                # ✅ Block generic sections
+                if section_name not in self.BLOCKED_SECTIONS:
+                    scored_ids.add(item_id)
+                    score = self._score_dict(query_words, data)
+                    if score > 0:
+                        section_key = path.split("/")[-1] if "/" in path else path
+                        score += self._get_section_bonus(section_key)
+                        results.append((score, self._item_to_result(path, data)))
+
             kw_data = data.get("keywords")
             if kw_data and item_id not in scored_ids:
                 scored_ids.add(item_id)
                 self._process_keywords(query_words, kw_data, data, results, scored_ids)
+
             for key, value in data.items():
                 if key in ("id",): continue
+                # ✅ Skip blocked sections entirely
+                if key in self.BLOCKED_SECTIONS: continue
                 new_path = f"{path}/{key}" if path else key
                 self._deep_search_scored(query_words, value, new_path, results, scored_ids)
+
         elif isinstance(data, list):
-            for item in data: self._deep_search_scored(query_words, item, path, results, scored_ids)
+            for item in data:
+                self._deep_search_scored(query_words, item, path, results, scored_ids)
         elif isinstance(data, str) and data:
             score = self._score_match(query_words, data)
-            if score > 0: results.append((score, self._string_to_result(path, data)))
+            if score > 0:
+                results.append((score, self._string_to_result(path, data)))
 
     def _process_keywords(self, query_words, kw_data, parent_data, results, scored_ids):
         if isinstance(kw_data, dict):
@@ -420,6 +444,7 @@ class KnowledgeManager:
         skip_keys = {"id", "aliases", "keywords", "name", "short_name", "city", "type"}
         for section_key, section_value in parent_data.items():
             if section_key in skip_keys: continue
+            if section_key in self.BLOCKED_SECTIONS: continue
             if isinstance(section_value, list):
                 for item in section_value:
                     if isinstance(item, dict) and id(item) not in scored_ids:
@@ -435,10 +460,9 @@ class KnowledgeManager:
             item.get("name") or item.get("title") or item.get("question")
             or item.get("channel") or item.get("username")
             or item.get("company") or item.get("position")
-            or item.get("description")  # ✅ Added
+            or item.get("description")
             or fallback
         )
-        # ✅ If title is still a technical key, use description
         if not title or title == fallback:
             title = item.get("description") or fallback.replace("_", " ").title()
         url = item.get("url", "")
