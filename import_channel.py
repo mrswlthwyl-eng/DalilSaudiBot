@@ -11,21 +11,58 @@ from telethon import TelegramClient
 
 SESSION_NAME = "bisha_channel_import_session"
 
+API_ID = os.getenv("TELEGRAM_API_ID")
+API_HASH = os.getenv("TELEGRAM_API_HASH")
+
+if not API_ID:
+    raise RuntimeError(
+        "TELEGRAM_API_ID غير موجود في Environment Variables"
+    )
+
+if not API_HASH:
+    raise RuntimeError(
+        "TELEGRAM_API_HASH غير موجود في Environment Variables"
+    )
+
+try:
+    API_ID = int(API_ID)
+except ValueError:
+    raise RuntimeError(
+        "TELEGRAM_API_ID يجب أن يكون رقمًا صحيحًا"
+    )
+
+
+# ============================================================
+# قناة جامعة بيشة
+# ============================================================
+
 CHANNEL_USERNAME = "Bishauniversity3"
 
 CHANNEL_URL = "https://t.me/Bishauniversity3"
 
 CHANNEL_ID = -1004493313338
 
+
+# ============================================================
+# قاعدة المعرفة
+# ============================================================
+
 DATABASE_FILE = "bisha_channel_knowledge.json"
 
 
 # ============================================================
-# قراءة النص من المنشور
+# قراءة نص المنشور
 # ============================================================
 
 def get_message_text(message):
-    text = getattr(message, "message", None)
+    if not message:
+        return ""
+
+    text = getattr(
+        message,
+        "message",
+        None
+    )
 
     if not text:
         return ""
@@ -55,66 +92,99 @@ def normalize_text(text):
     }
 
     for old, new in replacements.items():
-        text = text.replace(old, new)
+        text = text.replace(
+            old,
+            new
+        )
 
-    return " ".join(text.split())
+    return " ".join(
+        text.split()
+    )
 
 
 # ============================================================
-# رابط المنشور
+# إنشاء رابط المنشور
 # ============================================================
 
 def make_message_link(message_id):
-    return f"{CHANNEL_URL}/{message_id}"
+    return (
+        f"{CHANNEL_URL}/{message_id}"
+    )
 
 
 # ============================================================
-# تحميل قاعدة البيانات
+# تحميل قاعدة المعرفة
 # ============================================================
 
 def load_database():
-    if not os.path.exists(DATABASE_FILE):
+
+    if not os.path.exists(
+        DATABASE_FILE
+    ):
         return []
 
     try:
+
         with open(
             DATABASE_FILE,
             "r",
             encoding="utf-8"
         ) as file:
+
             data = json.load(file)
 
-        if isinstance(data, list):
+        if isinstance(
+            data,
+            list
+        ):
             return data
 
     except Exception as e:
-        print(f"خطأ في قراءة قاعدة البيانات: {e}")
+
+        print(
+            f"خطأ في قراءة قاعدة المعرفة: {e}"
+        )
 
     return []
 
 
 # ============================================================
-# حفظ قاعدة البيانات
+# حفظ قاعدة المعرفة
 # ============================================================
 
 def save_database(database):
-    database.sort(
-        key=lambda item: item.get(
-            "message_id",
-            0
-        )
-    )
 
-    with open(
-        DATABASE_FILE,
-        "w",
-        encoding="utf-8"
-    ) as file:
-        json.dump(
-            database,
-            file,
-            ensure_ascii=False,
-            indent=2
+    try:
+
+        database.sort(
+            key=lambda item:
+            item.get(
+                "message_id",
+                0
+            )
+        )
+
+        with open(
+            DATABASE_FILE,
+            "w",
+            encoding="utf-8"
+        ) as file:
+
+            json.dump(
+                database,
+                file,
+                ensure_ascii=False,
+                indent=2
+            )
+
+        print(
+            f"تم حفظ {len(database)} منشور في قاعدة المعرفة."
+        )
+
+    except Exception as e:
+
+        print(
+            f"خطأ في حفظ قاعدة المعرفة: {e}"
         )
 
 
@@ -124,7 +194,9 @@ def save_database(database):
 
 def create_record(message):
 
-    text = get_message_text(message)
+    text = get_message_text(
+        message
+    )
 
     media = getattr(
         message,
@@ -133,7 +205,9 @@ def create_record(message):
     )
 
     if media:
-        media_type = media.__class__.__name__
+        media_type = (
+            media.__class__.__name__
+        )
     else:
         media_type = "text"
 
@@ -142,7 +216,9 @@ def create_record(message):
 
         "text": text,
 
-        "normalized": normalize_text(text),
+        "normalized": normalize_text(
+            text
+        ),
 
         "date": (
             message.date.isoformat()
@@ -183,7 +259,7 @@ def create_record(message):
 
 
 # ============================================================
-# استيراد جميع المنشورات
+# استيراد جميع منشورات القناة
 # ============================================================
 
 async def import_channel():
@@ -193,15 +269,23 @@ async def import_channel():
     print("بدء استيراد قناة جامعة بيشة")
     print("=" * 70)
 
-    print(f"القناة: @{CHANNEL_USERNAME}")
-    print(f"الرابط: {CHANNEL_URL}")
-    print(f"Channel ID: {CHANNEL_ID}")
+    print(
+        f"القناة: @{CHANNEL_USERNAME}"
+    )
+
+    print(
+        f"الرابط: {CHANNEL_URL}"
+    )
+
+    print(
+        f"Channel ID: {CHANNEL_ID}"
+    )
 
     print("=" * 70)
 
-    # --------------------------------------------------------
-    # تحميل البيانات القديمة إن وجدت
-    # --------------------------------------------------------
+    # ========================================================
+    # تحميل قاعدة المعرفة الموجودة
+    # ========================================================
 
     old_database = load_database()
 
@@ -215,62 +299,137 @@ async def import_channel():
         f"المنشورات الموجودة مسبقًا: {len(posts)}"
     )
 
-    # --------------------------------------------------------
-    # استخدام جلسة Telegram التي سجلت الدخول بها
-    # --------------------------------------------------------
+    # ========================================================
+    # التحقق من ملف الجلسة
+    # ========================================================
+
+    session_file = (
+        SESSION_NAME + ".session"
+    )
 
     if not os.path.exists(
-        SESSION_NAME + ".session"
+        session_file
     ):
+
         print("")
-        print("خطأ: ملف جلسة Telegram غير موجود.")
         print(
-            f"المطلوب: {SESSION_NAME}.session"
+            "خطأ: ملف جلسة Telegram غير موجود."
         )
+
+        print(
+            f"الملف المطلوب: {session_file}"
+        )
+
+        print("")
+        print(
+            "شغّل login_telegram.py أولًا لتسجيل الدخول."
+        )
+
         return
 
+    # ========================================================
+    # إنشاء عميل Telegram
+    # ========================================================
+
     print("")
-    print("جاري تشغيل جلسة Telegram...")
+    print(
+        "جاري تشغيل جلسة Telegram..."
+    )
 
     client = TelegramClient(
         SESSION_NAME,
-        None,
-        None
+        API_ID,
+        API_HASH
     )
 
     try:
 
         await client.connect()
 
-        # ----------------------------------------------------
-        # التأكد من تسجيل الدخول
-        # ----------------------------------------------------
+        # ====================================================
+        # التحقق من تسجيل الدخول
+        # ====================================================
 
         if not await client.is_user_authorized():
 
             print("")
-            print("الجلسة غير مسجلة الدخول.")
+            print(
+                "الجلسة غير مسجلة الدخول."
+            )
+
             print(
                 "شغّل login_telegram.py أولًا."
             )
 
             await client.disconnect()
+
             return
 
         print(
             "تم الاتصال بحساب Telegram بنجاح."
         )
 
-        # ----------------------------------------------------
+        # ====================================================
+        # معلومات الحساب
+        # ====================================================
+
+        try:
+
+            me = await client.get_me()
+
+            print(
+                f"الحساب: {me.first_name or ''}"
+            )
+
+            if me.username:
+
+                print(
+                    f"Username: @{me.username}"
+                )
+
+            print(
+                f"User ID: {me.id}"
+            )
+
+        except Exception as e:
+
+            print(
+                f"تعذر قراءة معلومات الحساب: {e}"
+            )
+
+        # ====================================================
         # الوصول إلى القناة
-        # ----------------------------------------------------
+        # ====================================================
 
         print("")
-        print("جاري الوصول إلى قناة جامعة بيشة...")
-
-        channel = await client.get_entity(
-            CHANNEL_USERNAME
+        print(
+            "جاري الوصول إلى قناة جامعة بيشة..."
         )
+
+        try:
+
+            channel = await client.get_entity(
+                CHANNEL_USERNAME
+            )
+
+        except Exception as e:
+
+            print("")
+            print(
+                "تعذر الوصول إلى القناة."
+            )
+
+            print(
+                f"الخطأ: {e}"
+            )
+
+            await client.disconnect()
+
+            return
+
+        # ====================================================
+        # معلومات القناة
+        # ====================================================
 
         real_channel_id = getattr(
             channel,
@@ -293,18 +452,26 @@ async def import_channel():
             f"Channel ID: {real_channel_id}"
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # التحقق من القناة
-        # ----------------------------------------------------
+        # ====================================================
 
-        expected_id = abs(CHANNEL_ID)
+        expected_channel_id = abs(
+            CHANNEL_ID
+        )
 
-        if str(expected_id).startswith("100"):
-            expected_id = int(
-                str(expected_id)[3:]
+        if str(
+            expected_channel_id
+        ).startswith("100"):
+
+            expected_channel_id = int(
+                str(expected_channel_id)[3:]
             )
 
-        if real_channel_id != expected_id:
+        if (
+            real_channel_id
+            != expected_channel_id
+        ):
 
             print("")
             print(
@@ -316,10 +483,11 @@ async def import_channel():
             )
 
             print(
-                f"ID المطلوب: {expected_id}"
+                f"ID المطلوب: {expected_channel_id}"
             )
 
             await client.disconnect()
+
             return
 
         print("")
@@ -327,15 +495,21 @@ async def import_channel():
             "تم التحقق من قناة جامعة بيشة بنجاح."
         )
 
-        # ----------------------------------------------------
-        # قراءة جميع المنشورات القديمة
-        # ----------------------------------------------------
+        # ====================================================
+        # قراءة جميع المنشورات السابقة
+        # ====================================================
 
         print("")
         print("=" * 70)
-        print("جاري قراءة جميع المنشورات السابقة...")
-        print("سيتم قراءة كامل سجل القناة.")
-        print("قد تستغرق العملية وقتًا حسب عدد المنشورات.")
+        print(
+            "جاري قراءة جميع المنشورات السابقة..."
+        )
+        print(
+            "سيتم قراءة كامل سجل القناة."
+        )
+        print(
+            "قد تستغرق العملية وقتًا حسب عدد المنشورات."
+        )
         print("=" * 70)
 
         total_messages = 0
@@ -345,78 +519,126 @@ async def import_channel():
         media_messages = 0
         empty_messages = 0
 
-        async for message in client.iter_messages(
-            channel,
-            limit=None
-        ):
+        try:
 
-            total_messages += 1
+            async for message in client.iter_messages(
+                channel,
+                limit=None
+            ):
 
-            text = get_message_text(
-                message
-            )
+                total_messages += 1
 
-            has_media = bool(
-                getattr(
-                    message,
-                    "media",
-                    None
+                text = get_message_text(
+                    message
                 )
-            )
 
-            # ------------------------------------------------
-            # منشور بدون نص
-            # ------------------------------------------------
+                has_media = bool(
+                    getattr(
+                        message,
+                        "media",
+                        None
+                    )
+                )
 
-            if not text:
+                # --------------------------------------------
+                # منشور بدون نص
+                # --------------------------------------------
 
-                if has_media:
-                    media_messages += 1
+                if not text:
+
+                    if has_media:
+
+                        media_messages += 1
+
+                    else:
+
+                        empty_messages += 1
+
+                    continue
+
+                text_messages += 1
+
+                # --------------------------------------------
+                # إنشاء سجل المنشور
+                # --------------------------------------------
+
+                record = create_record(
+                    message
+                )
+
+                message_id = (
+                    message.id
+                )
+
+                # --------------------------------------------
+                # تحديد جديد أو محدث
+                # --------------------------------------------
+
+                if message_id in posts:
+
+                    updated_messages += 1
+
                 else:
-                    empty_messages += 1
 
-                continue
+                    saved_messages += 1
 
-            text_messages += 1
+                posts[
+                    message_id
+                ] = record
 
-            # ------------------------------------------------
-            # إنشاء سجل المنشور
-            # ------------------------------------------------
+                # --------------------------------------------
+                # عرض التقدم
+                # --------------------------------------------
 
-            record = create_record(
-                message
+                if (
+                    total_messages % 50
+                    == 0
+                ):
+
+                    print(
+                        f"تمت قراءة: "
+                        f"{total_messages} | "
+                        f"نصي: "
+                        f"{text_messages} | "
+                        f"جديد: "
+                        f"{saved_messages} | "
+                        f"محدث: "
+                        f"{updated_messages} | "
+                        f"وسائط: "
+                        f"{media_messages}"
+                    )
+
+        except Exception as e:
+
+            print("")
+            print(
+                "حدث خطأ أثناء قراءة القناة:"
             )
 
-            message_id = message.id
+            print(e)
 
-            if message_id in posts:
-                updated_messages += 1
-            else:
-                saved_messages += 1
+            # حفظ ما تم جمعه حتى لحظة الخطأ
+            database = list(
+                posts.values()
+            )
 
-            posts[message_id] = record
+            save_database(
+                database
+            )
 
-            # ------------------------------------------------
-            # عرض التقدم
-            # ------------------------------------------------
+            raise
 
-            if total_messages % 50 == 0:
-
-                print(
-                    f"تمت قراءة: {total_messages} | "
-                    f"نصي: {text_messages} | "
-                    f"جديد: {saved_messages} | "
-                    f"محدث: {updated_messages} | "
-                    f"وسائط: {media_messages}"
-                )
-
-        # ----------------------------------------------------
-        # تحويل إلى قائمة
-        # ----------------------------------------------------
+        # ====================================================
+        # تحويل البيانات إلى قائمة
+        # ====================================================
 
         database = list(
             posts.values()
         )
+
+        # ====================================================
+        # ترتيب المنشورات
+        # ====================================================
 
         database.sort(
             key=lambda item:
@@ -426,70 +648,84 @@ async def import_channel():
             )
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # حفظ قاعدة المعرفة
-        # ----------------------------------------------------
+        # ====================================================
 
         print("")
-        print("جاري حفظ قاعدة المعرفة...")
+        print(
+            "جاري حفظ قاعدة المعرفة..."
+        )
 
         save_database(
             database
         )
 
-        # ----------------------------------------------------
-        # النتيجة
-        # ----------------------------------------------------
+        # ====================================================
+        # عرض النتيجة
+        # ====================================================
 
         print("")
         print("=" * 70)
-        print("اكتمل استيراد قناة جامعة بيشة")
+        print(
+            "اكتمل استيراد قناة جامعة بيشة"
+        )
         print("=" * 70)
 
         print(
-            f"إجمالي الرسائل المقروءة: {total_messages}"
+            f"إجمالي الرسائل المقروءة: "
+            f"{total_messages}"
         )
 
         print(
-            f"المنشورات النصية: {text_messages}"
+            f"المنشورات النصية: "
+            f"{text_messages}"
         )
 
         print(
-            f"منشورات جديدة: {saved_messages}"
+            f"منشورات جديدة: "
+            f"{saved_messages}"
         )
 
         print(
-            f"منشورات محدثة: {updated_messages}"
+            f"منشورات محدثة: "
+            f"{updated_messages}"
         )
 
         print(
-            f"منشورات وسائط بدون نص: {media_messages}"
+            f"منشورات وسائط بدون نص: "
+            f"{media_messages}"
         )
 
         print(
-            f"رسائل فارغة: {empty_messages}"
+            f"رسائل فارغة: "
+            f"{empty_messages}"
         )
 
         print(
-            f"إجمالي قاعدة المعرفة: {len(database)}"
+            f"إجمالي قاعدة المعرفة: "
+            f"{len(database)}"
         )
 
         print(
-            f"ملف قاعدة المعرفة: {DATABASE_FILE}"
+            f"ملف قاعدة المعرفة: "
+            f"{DATABASE_FILE}"
         )
 
         print("=" * 70)
 
-        # ----------------------------------------------------
+        # ====================================================
         # آخر منشور
-        # ----------------------------------------------------
+        # ====================================================
 
         if database:
 
             last_post = database[-1]
 
             print("")
-            print("آخر منشور محفوظ:")
+            print(
+                "آخر منشور محفوظ:"
+            )
 
             print(
                 f"رقم المنشور: "
@@ -507,19 +743,8 @@ async def import_channel():
         )
 
         print(
-            "يمكن الآن تشغيل main.py."
+            "يمكن الآن استخدام قاعدة المعرفة مع main.py."
         )
-
-        print("=" * 70)
-
-    except Exception as e:
-
-        print("")
-        print("=" * 70)
-        print("حدث خطأ أثناء استيراد القناة")
-        print("=" * 70)
-
-        print(e)
 
         print("=" * 70)
 
@@ -534,7 +759,7 @@ async def import_channel():
 
 
 # ============================================================
-# تشغيل الملف
+# التشغيل
 # ============================================================
 
 if __name__ == "__main__":
@@ -555,6 +780,9 @@ if __name__ == "__main__":
     except Exception as e:
 
         print("")
+        print("=" * 70)
         print(
-            f"خطأ: {e}"
+            "حدث خطأ:"
         )
+        print(e)
+        print("=" * 70)
