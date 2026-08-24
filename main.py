@@ -2,7 +2,6 @@ import os
 import re
 import json
 import html
-import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -57,10 +56,12 @@ if not TELEGRAM_API_ID:
         "TELEGRAM_API_ID غير موجود في Environment Variables"
     )
 
+
 if not TELEGRAM_API_HASH:
     raise RuntimeError(
         "TELEGRAM_API_HASH غير موجود في Environment Variables"
     )
+
 
 if not TELEGRAM_SESSION:
     raise RuntimeError(
@@ -89,6 +90,7 @@ ALLOWED_GROUPS = {
     -1004452669915,
 }
 
+
 ALLOWED_USERS = {
     2076364383,
 }
@@ -98,14 +100,84 @@ ALLOWED_USERS = {
 # قناة دليلي جامعة بيشة
 # ============================================================
 
+# مهم:
+# هذا هو Channel ID الخاص بـ Telegram Bot API
 BISHA_CHANNEL_ID = -1004493313338
+
 
 BISHA_CHANNEL_USERNAME = (
     "Bishauniversity3"
 )
 
+
 BISHA_CHANNEL_URL = (
     "https://t.me/Bishauniversity3"
+)
+
+
+# ============================================================
+# تحويل Channel ID من Bot API إلى Telethon
+# ============================================================
+
+def telegram_channel_id_to_telethon_id(
+    channel_id
+):
+    """
+    Telegram Bot API:
+        -1004493313338
+
+    Telethon:
+        4493313338
+
+    لذلك نحذف -100 من بداية الرقم.
+    """
+
+    try:
+
+        channel_id = int(
+            channel_id
+        )
+
+    except (
+        TypeError,
+        ValueError
+    ):
+
+        raise ValueError(
+            "Channel ID غير صالح"
+        )
+
+
+    absolute_id = abs(
+        channel_id
+    )
+
+
+    absolute_string = str(
+        absolute_id
+    )
+
+
+    if absolute_string.startswith(
+        "100"
+    ):
+
+        return int(
+            absolute_string[3:]
+        )
+
+
+    return absolute_id
+
+
+# ============================================================
+# الرقم الذي سيستخدمه Telethon
+# ============================================================
+
+BISHA_TELETHON_CHANNEL_ID = (
+    telegram_channel_id_to_telethon_id(
+        BISHA_CHANNEL_ID
+    )
 )
 
 
@@ -117,6 +189,7 @@ CHANNEL_DB_FILE = (
     "bisha_channel_knowledge.json"
 )
 
+
 MAX_CHANNEL_POSTS = 10000
 
 
@@ -125,14 +198,18 @@ MAX_CHANNEL_POSTS = 10000
 # ============================================================
 
 BISHA_TOPICS = {
+
     "التسجيل",
     "تسجيل",
     "التسجيل الجامعي",
+
     "القبول",
     "قبول",
+
     "بلاك بورد",
     "blackboard",
     "البلاك بورد",
+
     "البريد الجامعي",
     "الايميل الجامعي",
     "الإيميل الجامعي",
@@ -140,72 +217,97 @@ BISHA_TOPICS = {
     "الايميل",
     "الإيميل",
     "ايميل",
+
     "أكاديميت",
     "اكاديميت",
     "اكادميت",
+
     "الخدمات الأكاديمية",
     "الخدمات الاكاديمية",
+
     "الرقم الجامعي",
+
     "المكافأة",
     "المكافآت",
     "المكافاه",
     "المكافئات",
+
     "الآيبان",
     "ايبان",
     "iban",
+
     "تغيير التخصص",
     "التخصص",
     "التخصصات",
+
     "التحويل",
     "تحويل",
     "التحويل الداخلي",
     "التحويل الخارجي",
+
     "الاعتذار",
     "اعتذار",
     "الاعتذار عن الفصل",
+
     "تأجيل",
     "تاجيل",
     "تأجيل الفصل",
+
     "الانسحاب",
     "انسحاب",
     "الانسحاب من الجامعة",
     "الانسحاب من القبول",
+
     "الجداول",
     "الجدول",
     "الجدول الدراسي",
+
     "المقررات",
     "مقررات",
     "المقرر",
     "المادة",
+
     "التدريب",
     "التدريب الميداني",
     "التدريب التطبيقي",
+
     "الدبلومات",
     "الدبلوم",
     "الدبلومات المدفوعة",
+
     "التقويم الأكاديمي",
     "التقويم الاكاديمي",
     "التقويم",
+
     "المحاضرات",
     "المحاضرة",
+
     "الاختبارات",
     "الاختبار",
     "الاختبارات النهائية",
+
     "النتائج",
     "الدرجات",
     "الدرجة",
+
     "الخدمات الإلكترونية",
     "الخدمات الالكترونية",
+
     "نفاذ",
     "النفاذ",
+
     "كلمة المرور",
     "الباسورد",
     "كلمة السر",
+
     "البوابة",
     "البوابة الإلكترونية",
+
     "المنظومة الجامعية",
+
     "جامعة بيشة",
     "جامعه بيشه",
+
     "بيشة",
     "بيشه",
 }
@@ -216,6 +318,7 @@ BISHA_TOPICS = {
 # ============================================================
 
 QUESTION_WORDS = {
+
     "متى",
     "كيف",
     "وين",
@@ -223,35 +326,47 @@ QUESTION_WORDS = {
     "فين",
     "كم",
     "هل",
+
     "وش",
     "ايش",
     "ماهو",
     "ماهي",
     "وشو",
+
     "ليش",
     "لماذا",
+
     "ابي",
     "ابغى",
     "احتاج",
     "ممكن",
+
     "طريقة",
     "طريقه",
+
     "رابط",
     "موعد",
     "شرح",
+
     "استفسار",
     "استفسر",
+
     "اعرف",
     "اقدر",
     "تقدر",
+
     "عندي",
     "عندكم",
+
     "اريد",
     "أريد",
+
     "اعطني",
     "عطني",
+
     "كيفية",
     "كيفيه",
+
     "وشلون",
     "شلون",
 }
@@ -293,6 +408,7 @@ SYSTEM_PROMPT = """
 لا تستخدم Markdown.
 
 لا تكتب رابط منشور القناة بنفسك.
+
 سيتم إضافة الرابط تلقائيًا.
 """
 
@@ -316,6 +432,7 @@ def load_channel_database():
 
         return []
 
+
     try:
 
         with open(
@@ -328,6 +445,7 @@ def load_channel_database():
                 file
             )
 
+
         if isinstance(
             data,
             list
@@ -335,11 +453,13 @@ def load_channel_database():
 
             return data
 
+
     except Exception as e:
 
         print(
             f"Channel DB Load Error: {e}"
         )
+
 
     return []
 
@@ -360,6 +480,7 @@ def save_channel_database(
                 -MAX_CHANNEL_POSTS:
             ]
 
+
         with open(
             CHANNEL_DB_FILE,
             "w",
@@ -372,6 +493,7 @@ def save_channel_database(
                 ensure_ascii=False,
                 indent=2
             )
+
 
     except Exception as e:
 
@@ -397,6 +519,9 @@ def make_channel_message_link(
     message_id
 ):
 
+    if not message_id:
+        return ""
+
     return (
         f"{BISHA_CHANNEL_URL}/"
         f"{message_id}"
@@ -412,11 +537,14 @@ def normalize_text(
 ):
 
     if not text:
+
         return ""
+
 
     text = str(
         text
     ).lower()
+
 
     replacements = {
 
@@ -435,6 +563,7 @@ def normalize_text(
         "ـ": "",
     }
 
+
     for old, new in replacements.items():
 
         text = text.replace(
@@ -442,17 +571,20 @@ def normalize_text(
             new
         )
 
+
     text = re.sub(
         r"[^\w\s\u0600-\u06FF]",
         " ",
         text
     )
 
+
     text = re.sub(
         r"\s+",
         " ",
         text
     )
+
 
     return text.strip()
 
@@ -466,26 +598,33 @@ def get_message_text(
 ):
 
     if not message:
+
         return ""
 
+
     text = (
+
         getattr(
             message,
             "text",
             None
         )
+
         or getattr(
             message,
             "caption",
             None
         )
+
         or getattr(
             message,
             "message",
             None
         )
+
         or ""
     )
+
 
     return str(
         text
@@ -504,11 +643,13 @@ def create_channel_record(
         message
     )
 
+
     message_id = getattr(
         message,
         "id",
         None
     )
+
 
     message_date = getattr(
         message,
@@ -516,15 +657,19 @@ def create_channel_record(
         None
     )
 
+
     return {
 
-        "message_id": message_id,
+        "message_id":
+            message_id,
 
-        "text": text,
+        "text":
+            text,
 
-        "normalized": normalize_text(
-            text
-        ),
+        "normalized":
+            normalize_text(
+                text
+            ),
 
         "date": (
             message_date.isoformat()
@@ -532,9 +677,10 @@ def create_channel_record(
             else ""
         ),
 
-        "link": make_channel_message_link(
-            message_id
-        ),
+        "link":
+            make_channel_message_link(
+                message_id
+            ),
 
         "channel_id":
             BISHA_CHANNEL_ID,
@@ -543,32 +689,38 @@ def create_channel_record(
             BISHA_CHANNEL_USERNAME,
 
         "media_type": (
+
             message.media.__class__.__name__
+
             if getattr(
                 message,
                 "media",
                 None
             )
+
             else "text"
         ),
 
-        "views": getattr(
-            message,
-            "views",
-            None
-        ),
+        "views":
+            getattr(
+                message,
+                "views",
+                None
+            ),
 
-        "forwards": getattr(
-            message,
-            "forwards",
-            None
-        ),
+        "forwards":
+            getattr(
+                message,
+                "forwards",
+                None
+            ),
 
-        "grouped_id": getattr(
-            message,
-            "grouped_id",
-            None
-        ),
+        "grouped_id":
+            getattr(
+                message,
+                "grouped_id",
+                None
+            ),
     }
 
 
@@ -580,38 +732,66 @@ async def import_old_channel_posts():
 
     global channel_database
 
+
     print("")
     print("=" * 70)
+
     print(
         "بدء قراءة المنشورات السابقة من قناة جامعة بيشة..."
     )
+
     print("=" * 70)
+
 
     print(
         f"القناة: @{BISHA_CHANNEL_USERNAME}"
     )
 
+
     print(
-        f"Channel ID: {BISHA_CHANNEL_ID}"
+        f"Channel ID Bot API: "
+        f"{BISHA_CHANNEL_ID}"
     )
+
+
+    print(
+        f"Channel ID Telethon: "
+        f"{BISHA_TELETHON_CHANNEL_ID}"
+    )
+
 
     print(
         "جاري استخدام TELEGRAM_SESSION..."
     )
 
+
     client = None
+
 
     try:
 
+        # ----------------------------------------------------
+        # إنشاء عميل Telethon
+        # ----------------------------------------------------
+
         client = TelegramClient(
+
             StringSession(
                 TELEGRAM_SESSION
             ),
+
             TELEGRAM_API_ID,
+
             TELEGRAM_API_HASH
         )
 
+
+        # ----------------------------------------------------
+        # الاتصال
+        # ----------------------------------------------------
+
         await client.connect()
+
 
         if not await client.is_user_authorized():
 
@@ -621,17 +801,30 @@ async def import_old_channel_posts():
 
             return
 
+
         print(
             "تم الاتصال بحساب Telegram بنجاح."
         )
 
+
         # ----------------------------------------------------
-        # الوصول للقناة
+        # الوصول إلى القناة
         # ----------------------------------------------------
+
+        print(
+            f"جاري الوصول إلى القناة: "
+            f"@{BISHA_CHANNEL_USERNAME}"
+        )
+
 
         channel = await client.get_entity(
             BISHA_CHANNEL_USERNAME
         )
+
+
+        # ----------------------------------------------------
+        # استخراج ID الحقيقي من Telethon
+        # ----------------------------------------------------
 
         real_channel_id = getattr(
             channel,
@@ -639,23 +832,81 @@ async def import_old_channel_posts():
             None
         )
 
+
         print(
-            f"Channel ID الحقيقي: {real_channel_id}"
+            "=================================================="
         )
 
-        if real_channel_id != abs(
+
+        print(
+            f"Channel ID المطلوب Bot API:"
+        )
+
+
+        print(
             BISHA_CHANNEL_ID
+        )
+
+
+        print(
+            f"Channel ID المطلوب لـ Telethon:"
+        )
+
+
+        print(
+            BISHA_TELETHON_CHANNEL_ID
+        )
+
+
+        print(
+            f"Channel ID الحقيقي من Telethon:"
+        )
+
+
+        print(
+            real_channel_id
+        )
+
+
+        print(
+            "=================================================="
+        )
+
+
+        # ----------------------------------------------------
+        # التحقق الصحيح من القناة
+        # ----------------------------------------------------
+
+        if (
+            real_channel_id
+            != BISHA_TELETHON_CHANNEL_ID
         ):
 
             print(
-                "خطأ: القناة التي تم الوصول إليها ليست القناة المطلوبة."
+                "❌ خطأ: القناة التي تم الوصول إليها "
+                "ليست القناة المطلوبة."
             )
+
+
+            print(
+                f"المطلوب: "
+                f"{BISHA_TELETHON_CHANNEL_ID}"
+            )
+
+
+            print(
+                f"الموجود: "
+                f"{real_channel_id}"
+            )
+
 
             return
 
+
         print(
-            "تم التحقق من القناة بنجاح."
+            "✅ تم التحقق من قناة جامعة بيشة بنجاح."
         )
+
 
         # ----------------------------------------------------
         # تحويل قاعدة المعرفة إلى Dictionary
@@ -663,7 +914,9 @@ async def import_old_channel_posts():
 
         posts = {
 
-            item.get("message_id"):
+            item.get(
+                "message_id"
+            ):
                 item
 
             for item in channel_database
@@ -673,31 +926,43 @@ async def import_old_channel_posts():
             )
         }
 
+
         print(
             f"المنشورات الموجودة قبل الاستيراد: "
             f"{len(posts)}"
         )
 
+
         total = 0
+
         text_count = 0
+
         media_count = 0
+
         new_count = 0
+
         updated_count = 0
+
 
         # ----------------------------------------------------
         # قراءة كامل تاريخ القناة
         # ----------------------------------------------------
 
         async for message in client.iter_messages(
+
             channel,
+
             limit=None
+
         ):
 
             total += 1
 
+
             text = get_message_text(
                 message
             )
+
 
             has_media = bool(
                 getattr(
@@ -707,6 +972,11 @@ async def import_old_channel_posts():
                 )
             )
 
+
+            # ------------------------------------------------
+            # منشور بدون نص
+            # ------------------------------------------------
+
             if not text:
 
                 if has_media:
@@ -715,15 +985,23 @@ async def import_old_channel_posts():
 
                 continue
 
+
             text_count += 1
+
+
+            # ------------------------------------------------
+            # إنشاء سجل
+            # ------------------------------------------------
 
             record = create_channel_record(
                 message
             )
 
+
             message_id = record[
                 "message_id"
             ]
+
 
             if message_id in posts:
 
@@ -733,79 +1011,121 @@ async def import_old_channel_posts():
 
                 new_count += 1
 
+
             posts[
                 message_id
             ] = record
 
+
+            # ------------------------------------------------
+            # طباعة التقدم
+            # ------------------------------------------------
+
             if total % 50 == 0:
 
                 print(
+
                     f"تمت قراءة {total} "
+
                     f"| نصي: {text_count} "
+
                     f"| جديد: {new_count} "
+
                     f"| محدث: {updated_count}"
+
                 )
 
+
         # ----------------------------------------------------
-        # حفظ القاعدة
+        # حفظ قاعدة المعرفة
         # ----------------------------------------------------
 
         channel_database = list(
             posts.values()
         )
 
+
         channel_database.sort(
+
             key=lambda item:
+
             item.get(
                 "message_id",
                 0
             )
         )
 
+
         save_channel_database(
             channel_database
         )
 
+
         print("")
         print("=" * 70)
+
+
         print(
-            "اكتمل استيراد المنشورات السابقة."
+            "✅ اكتمل استيراد المنشورات السابقة."
         )
+
+
         print(
-            f"إجمالي الرسائل المقروءة: {total}"
+            f"إجمالي الرسائل المقروءة: "
+            f"{total}"
         )
+
+
         print(
-            f"المنشورات النصية: {text_count}"
+            f"المنشورات النصية: "
+            f"{text_count}"
         )
+
+
         print(
-            f"المنشورات الجديدة: {new_count}"
+            f"المنشورات الجديدة: "
+            f"{new_count}"
         )
+
+
         print(
-            f"المنشورات المحدثة: {updated_count}"
+            f"المنشورات المحدثة: "
+            f"{updated_count}"
         )
+
+
         print(
-            f"منشورات الوسائط بدون نص: {media_count}"
+            f"منشورات الوسائط بدون نص: "
+            f"{media_count}"
         )
+
+
         print(
             f"إجمالي قاعدة المعرفة: "
             f"{len(channel_database)}"
         )
+
+
         print("=" * 70)
+
 
     except Exception as e:
 
         print("")
         print(
-            "حدث خطأ أثناء استيراد القناة:"
+            "❌ حدث خطأ أثناء استيراد القناة:"
         )
+
 
         print(
             repr(e)
         )
 
+
         print(
             "سيستمر البوت باستخدام قاعدة المعرفة الموجودة."
         )
+
 
     finally:
 
@@ -818,6 +1138,7 @@ async def import_old_channel_posts():
             except Exception:
 
                 pass
+
 
         print(
             "تم إغلاق اتصال Telegram User API."
@@ -835,10 +1156,14 @@ async def handle_channel_post(
 
     global channel_database
 
+
     message = update.channel_post
 
+
     if not message:
+
         return
+
 
     if (
         message.chat.id
@@ -847,13 +1172,16 @@ async def handle_channel_post(
 
         return
 
+
     text = get_message_text(
         message
     )
 
+
     if not text:
 
         return
+
 
     record = {
 
@@ -864,11 +1192,16 @@ async def handle_channel_post(
             text,
 
         "normalized":
-            normalize_text(text),
+            normalize_text(
+                text
+            ),
 
         "date": (
+
             message.date.isoformat()
+
             if message.date
+
             else ""
         ),
 
@@ -884,8 +1217,9 @@ async def handle_channel_post(
             BISHA_CHANNEL_USERNAME,
     }
 
+
     # --------------------------------------------------------
-    # تحديث المنشور إذا كان موجودًا
+    # حذف النسخة القديمة
     # --------------------------------------------------------
 
     channel_database = [
@@ -900,39 +1234,65 @@ async def handle_channel_post(
         != message.message_id
     ]
 
+
+    # --------------------------------------------------------
+    # إضافة النسخة الجديدة
+    # --------------------------------------------------------
+
     channel_database.append(
         record
     )
 
+
     channel_database.sort(
+
         key=lambda item:
+
         item.get(
             "message_id",
             0
         )
     )
 
+
     save_channel_database(
         channel_database
     )
 
+
     print("")
     print("=" * 60)
+
+
     print(
         "تم استقبال منشور جديد من قناة جامعة بيشة"
     )
+
+
     print(
-        f"Message ID: {message.message_id}"
+        f"Message ID: "
+        f"{message.message_id}"
     )
+
+
     print(
-        f"Text: {text[:200]}"
+        f"Text: "
+        f"{text[:200]}"
     )
+
+
     print(
-        f"Link: {record['link']}"
+        f"Link: "
+        f"{record['link']}"
     )
+
+
     print(
-        f"Total Posts: {len(channel_database)}"
+        f"Total Posts: "
+        f"{len(channel_database)}"
     )
+
+
     print("=" * 60)
 
 
@@ -947,6 +1307,7 @@ def extract_keywords(
     normalized = normalize_text(
         text
     )
+
 
     return {
 
@@ -985,6 +1346,7 @@ STOP_WORDS = {
     "وشو",
 
     "كم",
+
     "اعرف",
     "تقدر",
     "اقدر",
@@ -995,8 +1357,6 @@ STOP_WORDS = {
 
     "طريقة",
     "طريقه",
-
-    "ممكن",
 }
 
 
@@ -1066,13 +1426,16 @@ def find_best_channel_post(
 
         return None, 0
 
+
     query_normalized = normalize_text(
         query
     )
 
+
     query_words = extract_keywords(
         query
     )
+
 
     useful_words = (
 
@@ -1080,12 +1443,16 @@ def find_best_channel_post(
 
         - {
             normalize_text(word)
+
             for word in STOP_WORDS
         }
     )
 
+
     best_item = None
+
     best_score = 0
+
 
     for item in channel_database:
 
@@ -1094,38 +1461,47 @@ def find_best_channel_post(
             ""
         )
 
+
         original_text = item.get(
             "text",
             ""
         )
 
+
         if not content or not original_text:
 
             continue
+
 
         content_words = set(
             content.split()
         )
 
+
         score = 0
+
 
         # ----------------------------------------------------
         # تطابق الكلمات
         # ----------------------------------------------------
 
         common_words = (
+
             useful_words
+
             .intersection(
                 content_words
             )
         )
 
+
         score += (
             len(common_words) * 8
         )
 
+
         # ----------------------------------------------------
-        # تطابق العبارات القوية
+        # العبارات القوية
         # ----------------------------------------------------
 
         for phrase in STRONG_PHRASES:
@@ -1135,6 +1511,7 @@ def find_best_channel_post(
                     phrase
                 )
             )
+
 
             if (
                 normalized_phrase
@@ -1148,6 +1525,7 @@ def find_best_channel_post(
 
                     score += 35
 
+
         # ----------------------------------------------------
         # تطابق الموضوع
         # ----------------------------------------------------
@@ -1160,11 +1538,11 @@ def find_best_channel_post(
                 )
             )
 
-            if len(
-                normalized_topic.split()
-            ) < 1:
+
+            if not normalized_topic:
 
                 continue
+
 
             if (
                 normalized_topic
@@ -1178,34 +1556,36 @@ def find_best_channel_post(
 
                     score += 15
 
+
         # ----------------------------------------------------
         # تطابق كامل
         # ----------------------------------------------------
 
         if (
             query_normalized
+
             and query_normalized
             in content
         ):
 
             score += 60
 
+
         # ----------------------------------------------------
-        # كلمات السؤال
+        # نسبة الكلمات المتطابقة
         # ----------------------------------------------------
 
         if useful_words:
 
             matched_ratio = (
 
-                len(
-                    common_words
-                )
+                len(common_words)
+
                 /
-                len(
-                    useful_words
-                )
+
+                len(useful_words)
             )
+
 
             if matched_ratio >= 0.7:
 
@@ -1215,8 +1595,9 @@ def find_best_channel_post(
 
                 score += 10
 
+
         # ----------------------------------------------------
-        # الأحدث عند تساوي النتائج
+        # أفضل نتيجة
         # ----------------------------------------------------
 
         if score > best_score:
@@ -1224,6 +1605,7 @@ def find_best_channel_post(
             best_score = score
 
             best_item = item
+
 
         elif (
             score == best_score
@@ -1235,14 +1617,17 @@ def find_best_channel_post(
                 0
             )
 
+
             best_id = best_item.get(
                 "message_id",
                 0
             )
 
+
             if current_id > best_id:
 
                 best_item = item
+
 
     return (
         best_item,
@@ -1263,13 +1648,16 @@ def search_channel(
 
         return []
 
+
     query_normalized = normalize_text(
         query
     )
 
+
     query_words = extract_keywords(
         query
     )
+
 
     useful_words = (
 
@@ -1277,11 +1665,14 @@ def search_channel(
 
         - {
             normalize_text(word)
+
             for word in STOP_WORDS
         }
     )
 
+
     results = []
+
 
     for item in channel_database:
 
@@ -1290,34 +1681,44 @@ def search_channel(
             ""
         )
 
+
         if not content:
 
             continue
+
 
         content_words = set(
             content.split()
         )
 
+
         score = 0
 
+
         common_words = (
+
             useful_words
+
             .intersection(
                 content_words
             )
         )
 
+
         score += (
             len(common_words) * 5
         )
 
+
         if (
             query_normalized
+
             and query_normalized
             in content
         ):
 
             score += 40
+
 
         for phrase in STRONG_PHRASES:
 
@@ -1327,14 +1728,21 @@ def search_channel(
                 )
             )
 
+
             if (
+
                 normalized_phrase
                 in query_normalized
-                and normalized_phrase
+
+                and
+
+                normalized_phrase
                 in content
+
             ):
 
                 score += 25
+
 
         if score > 0:
 
@@ -1345,16 +1753,22 @@ def search_channel(
                 )
             )
 
+
     results.sort(
+
         key=lambda x: (
+
             x[0],
+
             x[1].get(
                 "message_id",
                 0
             )
         ),
+
         reverse=True
     )
+
 
     return [
 
@@ -1378,23 +1792,34 @@ def is_bisha_question(
         text
     )
 
+
     for topic in BISHA_TOPICS:
 
         topic_normalized = (
-            normalize_text(topic)
+            normalize_text(
+                topic
+            )
         )
 
+
         if (
+
             topic_normalized
-            and topic_normalized
+
+            and
+
+            topic_normalized
             in normalized
+
         ):
 
             return True
 
+
     words = set(
         normalized.split()
     )
+
 
     normalized_question_words = {
 
@@ -1403,11 +1828,13 @@ def is_bisha_question(
         for word in QUESTION_WORDS
     }
 
+
     if words.intersection(
         normalized_question_words
     ):
 
         return True
+
 
     request_phrases = [
 
@@ -1435,14 +1862,21 @@ def is_bisha_question(
         "تحويل تخصص",
     ]
 
+
     for phrase in request_phrases:
 
         if (
-            normalize_text(phrase)
+
+            normalize_text(
+                phrase
+            )
+
             in normalized
+
         ):
 
             return True
+
 
     return False
 
@@ -1458,6 +1892,7 @@ def is_greeting(
     normalized = normalize_text(
         text
     )
+
 
     greetings = [
 
@@ -1481,9 +1916,11 @@ def is_greeting(
         "صباح النور",
     ]
 
+
     return any(
 
         normalized
+
         == normalize_text(
             greeting
         )
@@ -1504,13 +1941,16 @@ def is_authorized(
 
         return False
 
+
     chat_type = (
         update.effective_chat.type
     )
 
+
     if chat_type in (
 
         ChatType.GROUP,
+
         ChatType.SUPERGROUP,
 
     ):
@@ -1518,8 +1958,10 @@ def is_authorized(
         return (
 
             update.effective_chat.id
+
             in ALLOWED_GROUPS
         )
+
 
     if chat_type == ChatType.PRIVATE:
 
@@ -1527,11 +1969,14 @@ def is_authorized(
 
             return False
 
+
         return (
 
             update.effective_user.id
+
             in ALLOWED_USERS
         )
+
 
     return False
 
@@ -1548,15 +1993,19 @@ def log_unauthorized(
         update.effective_user
     )
 
+
     chat = (
         update.effective_chat
     )
 
+
     print("=" * 60)
+
 
     print(
         "محاولة استخدام غير مصرح بها"
     )
+
 
     if chat:
 
@@ -1564,15 +2013,18 @@ def log_unauthorized(
             f"Chat ID: {chat.id}"
         )
 
+
         print(
             f"Chat Type: {chat.type}"
         )
+
 
     if user:
 
         print(
             f"User ID: {user.id}"
         )
+
 
         if user.username:
 
@@ -1586,9 +2038,11 @@ def log_unauthorized(
                 "Username: لا يوجد"
             )
 
+
         print(
             f"Full Name: {user.full_name}"
         )
+
 
     print("=" * 60)
 
@@ -1605,9 +2059,13 @@ async def handle_unauthorized(
 
         return
 
+
     if (
+
         update.effective_chat.type
+
         == ChatType.PRIVATE
+
     ):
 
         await update.message.reply_text(
@@ -1637,12 +2095,18 @@ def clean_ai_answer(
 
         return ""
 
+
     answer = re.sub(
+
         r"```.*?```",
+
         "",
+
         answer,
+
         flags=re.DOTALL
     )
+
 
     for value in [
 
@@ -1659,6 +2123,7 @@ def clean_ai_answer(
             ""
         )
 
+
     return answer.strip()
 
 
@@ -1674,10 +2139,12 @@ def create_source_link(
 
         return ""
 
+
     safe_link = html.escape(
         link,
         quote=True
     )
+
 
     return (
 
@@ -1702,38 +2169,36 @@ async def send_original_post(
 
         return False
 
+
     text = item.get(
         "text",
         ""
     ).strip()
+
 
     link = item.get(
         "link",
         ""
     )
 
+
     if not text:
 
         return False
 
-    # --------------------------------------------------------
-    # النص الأصلي بدون إعادة صياغة
-    # --------------------------------------------------------
 
     safe_text = html.escape(
         text,
         quote=False
     )
 
-    # --------------------------------------------------------
-    # إضافة رابط المنشور
-    # --------------------------------------------------------
 
     safe_text += (
         create_source_link(
             link
         )
     )
+
 
     try:
 
@@ -1746,13 +2211,16 @@ async def send_original_post(
             disable_web_page_preview=True
         )
 
+
         return True
+
 
     except Exception as e:
 
         print(
             f"Send Original Post Error: {e}"
         )
+
 
         return False
 
@@ -1774,17 +2242,22 @@ async def start(
             update
         )
 
+
         await handle_unauthorized(
             update
         )
 
+
         return
 
-    await update.message.reply_text(
 
-        "👋 أهلاً وسهلاً بك في دليلي جامعة بيشة.\n\n"
-        "🎓 كيف أقدر أساعدك؟"
-    )
+    if update.message:
+
+        await update.message.reply_text(
+
+            "👋 أهلاً وسهلاً بك في دليلي جامعة بيشة.\n\n"
+            "🎓 كيف أقدر أساعدك؟"
+        )
 
 
 # ============================================================
@@ -1800,6 +2273,7 @@ async def reply_message(
 
         return
 
+
     if not is_authorized(
         update
     ):
@@ -1808,29 +2282,38 @@ async def reply_message(
             update
         )
 
+
         await handle_unauthorized(
             update
         )
 
+
         return
+
 
     if not update.effective_user:
 
         return
 
+
     user_id = (
         update.effective_user.id
     )
 
+
     user_text = (
 
         update.message.text
+
         or ""
+
     ).strip()
+
 
     if not user_text:
 
         return
+
 
     # --------------------------------------------------------
     # التحية
@@ -1846,7 +2329,9 @@ async def reply_message(
             "حياك الله 🌷"
         )
 
+
         return
+
 
     # --------------------------------------------------------
     # تجاهل الرسائل العادية
@@ -1858,17 +2343,21 @@ async def reply_message(
 
         return
 
+
     print("")
     print("=" * 70)
+
 
     print(
         f"سؤال الطالب: {user_text}"
     )
 
+
     print(
         f"عدد المنشورات في القاعدة: "
         f"{len(channel_database)}"
     )
+
 
     # --------------------------------------------------------
     # البحث عن أفضل منشور
@@ -1880,10 +2369,11 @@ async def reply_message(
         )
     )
 
+
     print(
-        f"أفضل نتيجة: "
-        f"{best_score}"
+        f"أفضل نتيجة: {best_score}"
     )
+
 
     if best_post:
 
@@ -1891,6 +2381,7 @@ async def reply_message(
             f"أفضل منشور: "
             f"{best_post.get('message_id')}"
         )
+
 
         print(
             f"النص: "
@@ -1903,68 +2394,87 @@ async def reply_message(
             "لم يتم العثور على منشور مناسب."
         )
 
+
     print("=" * 70)
 
+
     # --------------------------------------------------------
-    # إذا وجدنا منشورًا قويًا
+    # إرسال المنشور الأصلي عند التطابق القوي
     # --------------------------------------------------------
 
-    # 45 درجة فأكثر = تطابق قوي
     if (
+
         best_post
+
         and best_score >= 45
+
     ):
 
         print(
             "سيتم إرسال المنشور الأصلي مباشرة."
         )
 
+
         sent = await send_original_post(
+
             update,
+
             best_post
         )
 
+
         if sent:
 
-            # حفظ المحادثة
             memory.add_user_message(
+
                 user_id,
+
                 user_text
             )
 
+
             memory.add_assistant_message(
+
                 user_id,
+
                 best_post.get(
                     "text",
                     ""
                 )
             )
 
+
             return
 
+
     # --------------------------------------------------------
-    # إذا لم نجد منشورًا قويًا
-    # نستخدم الذكاء الاصطناعي
+    # استخدام الذكاء الاصطناعي
     # --------------------------------------------------------
 
     print(
         "لا يوجد تطابق قوي، سيتم استخدام الذكاء الاصطناعي."
     )
 
+
     matches = search_channel(
+
         user_text,
+
         limit=8
     )
+
 
     # --------------------------------------------------------
     # الوقت الحالي
     # --------------------------------------------------------
 
     now = datetime.now(
+
         ZoneInfo(
             "Asia/Riyadh"
         )
     )
+
 
     current_time_context = f"""
 
@@ -1983,15 +2493,20 @@ async def reply_message(
 Asia/Riyadh
 """
 
+
     # --------------------------------------------------------
     # تجهيز سياق المنشورات
     # --------------------------------------------------------
 
     channel_context = ""
 
+
     for index, item in enumerate(
+
         matches,
+
         start=1
+
     ):
 
         channel_context += f"""
@@ -2015,6 +2530,7 @@ Asia/Riyadh
 
 """
 
+
     if not matches:
 
         channel_context = (
@@ -2022,6 +2538,7 @@ Asia/Riyadh
             "لم يتم العثور على منشور مطابق "
             "في قاعدة منشورات قناة جامعة بيشة."
         )
+
 
     # --------------------------------------------------------
     # تعليمات الذكاء الاصطناعي
@@ -2072,6 +2589,7 @@ Asia/Riyadh
 أجب بشكل واضح ومختصر.
 """
 
+
     # --------------------------------------------------------
     # استدعاء الذكاء الاصطناعي
     # --------------------------------------------------------
@@ -2081,6 +2599,7 @@ Asia/Riyadh
         history = memory.get_history(
             user_id
         )
+
 
         answer = await provider.get_response(
 
@@ -2098,9 +2617,11 @@ Asia/Riyadh
             user_prompt=user_instruction
         )
 
+
         answer = clean_ai_answer(
             answer
         )
+
 
         if not answer:
 
@@ -2110,34 +2631,45 @@ Asia/Riyadh
                 "في منشورات قناة دليلي جامعة بيشة حاليًا."
             )
 
+
         # ----------------------------------------------------
         # حفظ المحادثة
         # ----------------------------------------------------
 
         memory.add_user_message(
+
             user_id,
+
             user_text
         )
 
+
         memory.add_assistant_message(
+
             user_id,
+
             answer
         )
+
 
         # ----------------------------------------------------
         # حماية HTML
         # ----------------------------------------------------
 
         safe_answer = html.escape(
+
             answer,
+
             quote=False
         )
+
 
         # ----------------------------------------------------
         # إضافة أفضل المصادر
         # ----------------------------------------------------
 
         added_links = set()
+
 
         for item in matches[:3]:
 
@@ -2146,9 +2678,13 @@ Asia/Riyadh
                 ""
             )
 
+
             if (
+
                 link
+
                 and link not in added_links
+
             ):
 
                 safe_answer += (
@@ -2157,9 +2693,11 @@ Asia/Riyadh
                     )
                 )
 
+
                 added_links.add(
                     link
                 )
+
 
         # ----------------------------------------------------
         # إرسال الرد
@@ -2174,11 +2712,13 @@ Asia/Riyadh
             disable_web_page_preview=True
         )
 
+
     except Exception as e:
 
         print(
             f"AI Error: {repr(e)}"
         )
+
 
         await update.message.reply_text(
 
@@ -2197,54 +2737,79 @@ async def on_startup(
 
     global channel_database
 
+
     print("")
     print("=" * 70)
+
+
     print(
         "بدء تشغيل DaliliSaudiBot..."
     )
+
+
     print("=" * 70)
 
+
     print(
-        f"Bisha Channel ID: "
+        f"Bisha Channel ID Bot API: "
         f"{BISHA_CHANNEL_ID}"
     )
+
+
+    print(
+        f"Bisha Channel ID Telethon: "
+        f"{BISHA_TELETHON_CHANNEL_ID}"
+    )
+
 
     print(
         f"Bisha Channel: "
         f"@{BISHA_CHANNEL_USERNAME}"
     )
 
+
     print(
         f"Allowed Groups: "
         f"{ALLOWED_GROUPS}"
     )
+
 
     print(
         f"Allowed Users: "
         f"{ALLOWED_USERS}"
     )
 
+
     print(
         f"Saved Channel Posts قبل الاستيراد: "
         f"{len(channel_database)}"
     )
 
+
     # --------------------------------------------------------
-    # قراءة كل المنشورات القديمة تلقائيًا
+    # استيراد المنشورات القديمة
     # --------------------------------------------------------
 
     await import_old_channel_posts()
 
+
     print("")
+
+
     print(
         f"Saved Channel Posts بعد الاستيراد: "
         f"{len(channel_database)}"
     )
 
+
     print("=" * 70)
+
+
     print(
         "تم تجهيز قاعدة منشورات قناة جامعة بيشة."
     )
+
+
     print("=" * 70)
 
 
@@ -2266,6 +2831,7 @@ async def on_shutdown(
             f"Shutdown Error: {e}"
         )
 
+
     print(
         "تم إيقاف DaliliSaudiBot."
     )
@@ -2278,9 +2844,12 @@ async def on_shutdown(
 def main():
 
     app = (
+
         Application.builder()
 
-        .token(TOKEN)
+        .token(
+            TOKEN
+        )
 
         .post_init(
             on_startup
@@ -2293,6 +2862,7 @@ def main():
         .build()
     )
 
+
     # --------------------------------------------------------
     # /start
     # --------------------------------------------------------
@@ -2300,13 +2870,16 @@ def main():
     app.add_handler(
 
         CommandHandler(
+
             "start",
+
             start
         )
     )
 
+
     # --------------------------------------------------------
-    # استقبال المنشورات الجديدة من القناة
+    # استقبال منشورات القناة الجديدة
     # --------------------------------------------------------
 
     app.add_handler(
@@ -2319,6 +2892,7 @@ def main():
         )
     )
 
+
     # --------------------------------------------------------
     # استقبال رسائل الطلاب
     # --------------------------------------------------------
@@ -2328,11 +2902,13 @@ def main():
         MessageHandler(
 
             filters.TEXT
+
             & ~filters.COMMAND,
 
             reply_message
         )
     )
+
 
     # --------------------------------------------------------
     # معلومات التشغيل
@@ -2341,37 +2917,51 @@ def main():
     print("")
     print("=" * 70)
 
+
     print(
         "DaliliSaudiBot is starting..."
     )
 
+
     print(
-        f"Bisha Channel ID: "
+        f"Bisha Channel ID Bot API: "
         f"{BISHA_CHANNEL_ID}"
     )
+
+
+    print(
+        f"Bisha Channel ID Telethon: "
+        f"{BISHA_TELETHON_CHANNEL_ID}"
+    )
+
 
     print(
         f"Bisha Channel: "
         f"@{BISHA_CHANNEL_USERNAME}"
     )
 
+
     print(
         f"Allowed Groups: "
         f"{ALLOWED_GROUPS}"
     )
+
 
     print(
         f"Allowed Users: "
         f"{ALLOWED_USERS}"
     )
 
+
     print("=" * 70)
+
 
     # --------------------------------------------------------
     # تشغيل البوت
     # --------------------------------------------------------
 
     app.run_polling(
+
         allowed_updates=Update.ALL_TYPES
     )
 
@@ -2394,9 +2984,7 @@ if __name__ == "__main__":
 
     except Exception as e:
 
-        print(
-            "=" * 70
-        )
+        print("=" * 70)
 
         print(
             "خطأ أثناء تشغيل البوت:"
@@ -2406,6 +2994,4 @@ if __name__ == "__main__":
             repr(e)
         )
 
-        print(
-            "=" * 70
-        )
+        print("=" * 70)
