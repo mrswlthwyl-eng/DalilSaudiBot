@@ -3,6 +3,10 @@ import re
 import json
 import html
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from hijridate import Gregorian
+
 from telegram import Update
 from telegram.constants import ChatType
 from telegram.ext import (
@@ -287,7 +291,7 @@ BISHA_TOPICS = {
 
     "موقع الكلية",
     "موقع الكليات",
-    
+
     "موقع",
     "مواقع",
     "تقييمات",
@@ -300,7 +304,7 @@ BISHA_TOPICS = {
     "العلامات الظاهرة في منصة القبول",
     "تحديث بعض البيانات في منصة قبول",
     "اختفت بعض التخصصات",
-    
+
 }
 
 
@@ -446,6 +450,450 @@ STRONG_PHRASES = [
 
 
 # ============================================================
+# نظام المكافأة الشهرية
+# ============================================================
+
+RIYADH_TZ = ZoneInfo(
+    "Asia/Riyadh"
+)
+
+
+# ------------------------------------------------------------
+# يوم إيداع المكافأة
+# ------------------------------------------------------------
+
+STIPEND_DAY = 27
+
+
+# ------------------------------------------------------------
+# مبالغ المكافأة
+# ------------------------------------------------------------
+
+STIPEND_SCIENTIFIC = 990
+
+STIPEND_ADMINISTRATIVE = 840
+
+
+# ============================================================
+# تحديد موعد المكافأة القادمة
+# ============================================================
+
+def get_next_stipend_date():
+
+    now = datetime.now(
+        RIYADH_TZ
+    )
+
+
+    # --------------------------------------------------------
+    # موعد المكافأة في الشهر الحالي
+    # --------------------------------------------------------
+
+    try:
+
+        target = datetime(
+
+            now.year,
+
+            now.month,
+
+            STIPEND_DAY,
+
+            0,
+
+            0,
+
+            0,
+
+            tzinfo=RIYADH_TZ
+        )
+
+    except ValueError:
+
+        target = None
+
+
+    # --------------------------------------------------------
+    # إذا موعد هذا الشهر انتهى
+    # ننتقل للشهر التالي
+    # --------------------------------------------------------
+
+    if target is None or target <= now:
+
+        if now.month == 12:
+
+            next_year = now.year + 1
+
+            next_month = 1
+
+        else:
+
+            next_year = now.year
+
+            next_month = now.month + 1
+
+
+        target = datetime(
+
+            next_year,
+
+            next_month,
+
+            STIPEND_DAY,
+
+            0,
+
+            0,
+
+            0,
+
+            tzinfo=RIYADH_TZ
+        )
+
+
+    return target
+
+
+# ============================================================
+# تحويل التاريخ الميلادي إلى هجري
+# ============================================================
+
+def gregorian_to_hijri(
+    date
+):
+
+    hijri = Gregorian(
+
+        date.year,
+
+        date.month,
+
+        date.day
+
+    ).to_hijri()
+
+
+    return (
+
+        hijri.year,
+
+        hijri.month,
+
+        hijri.day
+    )
+
+
+# ============================================================
+# اسم اليوم بالعربي
+# ============================================================
+
+ARABIC_DAYS = {
+
+    0: "الاثنين",
+
+    1: "الثلاثاء",
+
+    2: "الأربعاء",
+
+    3: "الخميس",
+
+    4: "الجمعة",
+
+    5: "السبت",
+
+    6: "الأحد",
+}
+
+
+# ============================================================
+# حساب الوقت المتبقي
+# ============================================================
+
+def calculate_remaining(
+    target
+):
+
+    now = datetime.now(
+        RIYADH_TZ
+    )
+
+
+    difference = (
+        target - now
+    )
+
+
+    total_seconds = max(
+
+        0,
+
+        int(
+            difference.total_seconds()
+        )
+    )
+
+
+    days = (
+        total_seconds // 86400
+    )
+
+
+    remaining = (
+        total_seconds % 86400
+    )
+
+
+    hours = (
+        remaining // 3600
+    )
+
+
+    remaining %= 3600
+
+
+    minutes = (
+        remaining // 60
+    )
+
+
+    seconds = (
+        remaining % 60
+    )
+
+
+    return (
+
+        days,
+
+        hours,
+
+        minutes,
+
+        seconds
+    )
+
+
+# ============================================================
+# تنسيق الوقت المتبقي
+# ============================================================
+
+def format_remaining(
+    days,
+    hours,
+    minutes
+):
+
+    parts = []
+
+
+    if days:
+
+        parts.append(
+            f"{days} يوم"
+        )
+
+
+    if hours:
+
+        parts.append(
+            f"{hours} ساعة"
+        )
+
+
+    if minutes:
+
+        parts.append(
+            f"{minutes} دقيقة"
+        )
+
+
+    if not parts:
+
+        parts.append(
+            "أقل من دقيقة"
+        )
+
+
+    return " و ".join(
+        parts
+    )
+
+
+# ============================================================
+# إنشاء رسالة المكافأة
+# ============================================================
+
+def create_stipend_response():
+
+    target = get_next_stipend_date()
+
+
+    # --------------------------------------------------------
+    # التاريخ الهجري
+    # --------------------------------------------------------
+
+    hijri_year, hijri_month, hijri_day = (
+
+        gregorian_to_hijri(
+            target
+        )
+    )
+
+
+    # --------------------------------------------------------
+    # اليوم
+    # --------------------------------------------------------
+
+    day_name = ARABIC_DAYS[
+        target.weekday()
+    ]
+
+
+    # --------------------------------------------------------
+    # الوقت المتبقي
+    # --------------------------------------------------------
+
+    days, hours, minutes, seconds = (
+
+        calculate_remaining(
+            target
+        )
+    )
+
+
+    remaining_text = format_remaining(
+
+        days,
+
+        hours,
+
+        minutes
+    )
+
+
+    # --------------------------------------------------------
+    # بناء الرسالة
+    # --------------------------------------------------------
+
+    response = (
+
+        "💰 المكافأة الشهرية\n\n"
+
+        "• مكافأة التخصصات العلمية والصحية والهندسية: "
+        "<b>990 ريال</b>.\n\n"
+
+        "• مكافأة التخصصات الأدبية والإدارية: "
+        "<b>840 ريال</b>.\n\n"
+
+        f"📅 إيداع المكافأة يكون يوم: "
+        f"<b>{day_name}</b>\n"
+
+        f"🗓 التاريخ الهجري: "
+        f"<b>{hijri_year:04d}-{hijri_month:02d}-{hijri_day:02d}هـ</b>\n"
+
+        f"📆 التاريخ الميلادي: "
+        f"<b>{target.year:04d}-{target.month:02d}-{target.day:02d}م</b>\n\n"
+
+        f"⏳ المتبقي: "
+        f"<b>بعد {remaining_text}</b>"
+    )
+
+
+    return response
+
+
+# ============================================================
+# معرفة هل السؤال عن المكافأة
+# ============================================================
+
+def is_stipend_question(
+    text
+):
+
+    normalized = normalize_text(
+        text
+    )
+
+
+    stipend_words = [
+
+        "مكافاه",
+        "المكافاه",
+
+        "مكافاة",
+        "المكافاة",
+
+        "مكافئات",
+        "المكافئة",
+
+        "مكافآت",
+        "المكافآت",
+
+        "مكافئه",
+        "المكافئه",
+
+        "مكافئيه",
+        "المكافئيه",
+
+        "متى المكافاه",
+        "متى المكافاة",
+
+        "موعد المكافاه",
+        "موعد المكافاة",
+
+        "تنزل المكافاه",
+        "تنزل المكافاة",
+
+        "متى تنزل المكافاه",
+        "متى تنزل المكافاة",
+
+        "ايداع المكافاه",
+        "ايداع المكافاة",
+
+        "إيداع المكافأة",
+
+        "مكافاة الجامعة",
+        "مكافاه الجامعه",
+
+        "مكافأة الجامعة",
+        "مكافئه الجامعه",
+    ]
+
+
+    for word in stipend_words:
+
+        if normalize_text(word) in normalized:
+
+            return True
+
+
+    # --------------------------------------------------------
+    # حالات إضافية
+    # --------------------------------------------------------
+
+    if (
+
+        "مكافاه" in normalized
+
+        or "مكافاة" in normalized
+
+        or "مكافئات" in normalized
+
+        or "مكافآت" in normalized
+
+        or "مكافئه" in normalized
+
+        or "مكافئيه" in normalized
+
+    ):
+
+        return True
+
+
+    return False
+
+
+# ============================================================
 # تحميل قاعدة المعرفة
 # ============================================================
 
@@ -461,9 +909,13 @@ def load_channel_database():
     try:
 
         with open(
+
             CHANNEL_DB_FILE,
+
             "r",
+
             encoding="utf-8"
+
         ) as file:
 
             data = json.load(
@@ -507,23 +959,34 @@ def save_channel_database(
 
 
         with open(
+
             CHANNEL_DB_FILE,
+
             "w",
+
             encoding="utf-8"
+
         ) as file:
 
             json.dump(
+
                 data,
+
                 file,
+
                 ensure_ascii=False,
+
                 indent=2
+
             )
 
 
     except Exception as e:
 
         print(
+
             f"Channel DB Save Error: {repr(e)}"
+
         )
 
 
@@ -550,8 +1013,11 @@ def make_channel_message_link(
 
 
     return (
+
         f"{BISHA_CHANNEL_URL}/"
+
         f"{message_id}"
+
     )
 
 
@@ -594,22 +1060,33 @@ def normalize_text(
     for old, new in replacements.items():
 
         text = text.replace(
+
             old,
+
             new
+
         )
 
 
     text = re.sub(
+
         r"[^\w\s\u0600-\u06FF]",
+
         " ",
+
         text
+
     )
 
 
     text = re.sub(
+
         r"\s+",
+
         " ",
+
         text
+
     )
 
 
@@ -632,24 +1109,37 @@ def get_message_text(
     text = (
 
         getattr(
+
             message,
+
             "text",
+
             None
+
         )
 
         or getattr(
+
             message,
+
             "caption",
+
             None
+
         )
 
         or getattr(
+
             message,
+
             "message",
+
             None
+
         )
 
         or ""
+
     )
 
 
@@ -672,16 +1162,24 @@ def create_channel_record(
 
 
     message_id = getattr(
+
         message,
+
         "id",
+
         None
+
     )
 
 
     message_date = getattr(
+
         message,
+
         "date",
+
         None
+
     )
 
 
@@ -705,17 +1203,23 @@ def create_channel_record(
             if message_date
 
             else ""
+
         ),
 
         "link":
+
             make_channel_message_link(
+
                 message_id
+
             ),
 
         "channel_id":
+
             BISHA_CHANNEL_ID,
 
         "channel_username":
+
             BISHA_CHANNEL_USERNAME,
 
         "media_type": (
@@ -723,34 +1227,55 @@ def create_channel_record(
             message.media.__class__.__name__
 
             if getattr(
+
                 message,
+
                 "media",
+
                 None
+
             )
 
             else "text"
+
         ),
 
         "views":
+
             getattr(
+
                 message,
+
                 "views",
+
                 None
+
             ),
 
         "forwards":
+
             getattr(
+
                 message,
+
                 "forwards",
+
                 None
+
             ),
 
         "grouped_id":
+
             getattr(
+
                 message,
+
                 "grouped_id",
+
                 None
+
             ),
+
     }
 
 
@@ -766,32 +1291,46 @@ async def import_old_channel_posts():
     print("")
     print("=" * 70)
 
+
     print(
+
         "بدء قراءة المنشورات السابقة من قناة جامعة بيشة..."
+
     )
+
 
     print("=" * 70)
 
 
     print(
+
         f"القناة: @{BISHA_CHANNEL_USERNAME}"
+
     )
 
 
     print(
+
         f"Channel ID Bot API: "
+
         f"{BISHA_CHANNEL_ID}"
+
     )
 
 
     print(
+
         f"Channel ID Telethon: "
+
         f"{BISHA_TELETHON_CHANNEL_ID}"
+
     )
 
 
     print(
+
         "جاري استخدام TELEGRAM_SESSION..."
+
     )
 
 
@@ -807,12 +1346,15 @@ async def import_old_channel_posts():
         client = TelegramClient(
 
             StringSession(
+
                 TELEGRAM_SESSION
+
             ),
 
             TELEGRAM_API_ID,
 
             TELEGRAM_API_HASH
+
         )
 
 
@@ -826,14 +1368,18 @@ async def import_old_channel_posts():
         if not await client.is_user_authorized():
 
             print(
+
                 "❌ TELEGRAM_SESSION غير مصرح به."
+
             )
 
             return
 
 
         print(
+
             "✅ تم الاتصال بحساب Telegram بنجاح."
+
         )
 
 
@@ -842,13 +1388,18 @@ async def import_old_channel_posts():
         # ----------------------------------------------------
 
         print(
+
             f"جاري الوصول إلى القناة: "
+
             f"@{BISHA_CHANNEL_USERNAME}"
+
         )
 
 
         channel = await client.get_entity(
+
             BISHA_CHANNEL_USERNAME
+
         )
 
 
@@ -857,46 +1408,69 @@ async def import_old_channel_posts():
         # ----------------------------------------------------
 
         real_channel_id = getattr(
+
             channel,
+
             "id",
+
             None
+
         )
 
 
         print(
+
             "=================================================="
+
         )
 
 
         print(
+
             f"Channel ID Bot API:"
+
         )
 
+
         print(
+
             BISHA_CHANNEL_ID
+
         )
 
 
         print(
+
             f"Channel ID Telethon المطلوب:"
+
         )
 
+
         print(
+
             BISHA_TELETHON_CHANNEL_ID
+
         )
 
 
         print(
+
             f"Channel ID الحقيقي:"
+
         )
 
+
         print(
+
             real_channel_id
+
         )
 
 
         print(
+
             "=================================================="
+
         )
 
 
@@ -905,25 +1479,37 @@ async def import_old_channel_posts():
         # ----------------------------------------------------
 
         if (
+
             real_channel_id
+
             != BISHA_TELETHON_CHANNEL_ID
+
         ):
 
             print(
+
                 "❌ القناة التي تم الوصول إليها "
+
                 "ليست القناة المطلوبة."
+
             )
 
 
             print(
+
                 f"المطلوب: "
+
                 f"{BISHA_TELETHON_CHANNEL_ID}"
+
             )
 
 
             print(
+
                 f"الموجود: "
+
                 f"{real_channel_id}"
+
             )
 
 
@@ -931,7 +1517,9 @@ async def import_old_channel_posts():
 
 
         print(
+
             "✅ تم التحقق من قناة جامعة بيشة بنجاح."
+
         )
 
 
@@ -942,28 +1530,41 @@ async def import_old_channel_posts():
         posts = {
 
             item.get(
+
                 "message_id"
+
             ):
+
                 item
 
             for item in channel_database
 
             if item.get(
+
                 "message_id"
+
             )
+
         }
 
 
         print(
+
             f"المنشورات الموجودة قبل الاستيراد: "
+
             f"{len(posts)}"
+
         )
 
 
         total = 0
+
         text_count = 0
+
         media_count = 0
+
         new_count = 0
+
         updated_count = 0
 
 
@@ -983,16 +1584,24 @@ async def import_old_channel_posts():
 
 
             text = get_message_text(
+
                 message
+
             )
 
 
             has_media = bool(
+
                 getattr(
+
                     message,
+
                     "media",
+
                     None
+
                 )
+
             )
 
 
@@ -1017,12 +1626,16 @@ async def import_old_channel_posts():
             # ------------------------------------------------
 
             record = create_channel_record(
+
                 message
+
             )
 
 
             message_id = record[
+
                 "message_id"
+
             ]
 
 
@@ -1036,7 +1649,9 @@ async def import_old_channel_posts():
 
 
             posts[
+
                 message_id
+
             ] = record
 
 
@@ -1064,7 +1679,9 @@ async def import_old_channel_posts():
         # ----------------------------------------------------
 
         channel_database = list(
+
             posts.values()
+
         )
 
 
@@ -1073,14 +1690,20 @@ async def import_old_channel_posts():
             key=lambda item:
 
             item.get(
+
                 "message_id",
+
                 0
+
             )
+
         )
 
 
         save_channel_database(
+
             channel_database
+
         )
 
 
@@ -1089,43 +1712,63 @@ async def import_old_channel_posts():
 
 
         print(
+
             "✅ اكتمل استيراد المنشورات السابقة."
+
         )
 
 
         print(
+
             f"إجمالي الرسائل المقروءة: "
+
             f"{total}"
+
         )
 
 
         print(
+
             f"المنشورات النصية: "
+
             f"{text_count}"
+
         )
 
 
         print(
+
             f"المنشورات الجديدة: "
+
             f"{new_count}"
+
         )
 
 
         print(
+
             f"المنشورات المحدثة: "
+
             f"{updated_count}"
+
         )
 
 
         print(
+
             f"منشورات الوسائط بدون نص: "
+
             f"{media_count}"
+
         )
 
 
         print(
+
             f"إجمالي قاعدة المعرفة: "
+
             f"{len(channel_database)}"
+
         )
 
 
@@ -1135,18 +1778,25 @@ async def import_old_channel_posts():
     except Exception as e:
 
         print("")
+
         print(
+
             "❌ حدث خطأ أثناء استيراد القناة:"
+
         )
 
 
         print(
+
             repr(e)
+
         )
 
 
         print(
+
             "سيستمر البوت باستخدام قاعدة المعرفة الموجودة."
+
         )
 
 
@@ -1164,7 +1814,9 @@ async def import_old_channel_posts():
 
 
         print(
+
             "تم إغلاق اتصال Telegram User API."
+
         )
 
 
@@ -1189,15 +1841,20 @@ async def handle_channel_post(
 
 
     if (
+
         message.chat.id
+
         != BISHA_CHANNEL_ID
+
     ):
 
         return
 
 
     text = get_message_text(
+
         message
+
     )
 
 
@@ -1207,7 +1864,9 @@ async def handle_channel_post(
 
 
     record = create_channel_record(
+
         message
+
     )
 
 
@@ -1222,9 +1881,13 @@ async def handle_channel_post(
         for item in channel_database
 
         if item.get(
+
             "message_id"
+
         )
+
         != message.message_id
+
     ]
 
 
@@ -1233,7 +1896,9 @@ async def handle_channel_post(
     # --------------------------------------------------------
 
     channel_database.append(
+
         record
+
     )
 
 
@@ -1242,14 +1907,20 @@ async def handle_channel_post(
         key=lambda item:
 
         item.get(
+
             "message_id",
+
             0
+
         )
+
     )
 
 
     save_channel_database(
+
         channel_database
+
     )
 
 
@@ -1258,31 +1929,45 @@ async def handle_channel_post(
 
 
     print(
+
         "✅ تم استقبال منشور جديد من قناة جامعة بيشة"
+
     )
 
 
     print(
+
         f"Message ID: "
+
         f"{message.message_id}"
+
     )
 
 
     print(
+
         f"Text: "
+
         f"{text[:200]}"
+
     )
 
 
     print(
+
         f"Link: "
+
         f"{record.get('link', '')}"
+
     )
 
 
     print(
+
         f"Total Posts: "
+
         f"{len(channel_database)}"
+
     )
 
 
@@ -1298,7 +1983,9 @@ def extract_keywords(
 ):
 
     normalized = normalize_text(
+
         text
+
     )
 
 
@@ -1309,6 +1996,7 @@ def extract_keywords(
         for word in normalized.split()
 
         if len(word) >= 2
+
     }
 
 
@@ -1322,13 +2010,18 @@ def calculate_post_score(
 ):
 
     query_normalized = normalize_text(
+
         query
+
     )
 
 
     content = item.get(
+
         "normalized",
+
         ""
+
     )
 
 
@@ -1338,7 +2031,9 @@ def calculate_post_score(
 
 
     query_words = extract_keywords(
+
         query
+
     )
 
 
@@ -1347,15 +2042,20 @@ def calculate_post_score(
         query_words
 
         - {
+
             normalize_text(word)
 
             for word in STOP_WORDS
+
         }
+
     )
 
 
     content_words = set(
+
         content.split()
+
     )
 
 
@@ -1367,10 +2067,13 @@ def calculate_post_score(
     # ========================================================
 
     if (
+
         len(query_normalized) >= 8
 
         and query_normalized
+
         in content
+
     ):
 
         score += 80
@@ -1385,13 +2088,18 @@ def calculate_post_score(
         useful_words
 
         .intersection(
+
             content_words
+
         )
+
     )
 
 
     score += (
+
         len(common_words) * 8
+
     )
 
 
@@ -1408,6 +2116,7 @@ def calculate_post_score(
             /
 
             len(useful_words)
+
         )
 
 
@@ -1431,18 +2140,26 @@ def calculate_post_score(
     for phrase in STRONG_PHRASES:
 
         normalized_phrase = normalize_text(
+
             phrase
+
         )
 
 
         if (
+
             normalized_phrase
+
             in query_normalized
+
         ):
 
             if (
+
                 normalized_phrase
+
                 in content
+
             ):
 
                 score += 45
@@ -1455,36 +2172,51 @@ def calculate_post_score(
     for topic in BISHA_TOPICS:
 
         normalized_topic = normalize_text(
+
             topic
+
         )
 
 
         # تجاهل المواضيع العامة جدًا
         if normalized_topic in {
+
             "بيشه",
+
             "بيشه",
+
             "جامعه بيشه",
+
             "جامعه بيشه",
+
         }:
 
             continue
 
 
         if len(
+
             normalized_topic
+
         ) < 4:
 
             continue
 
 
         if (
+
             normalized_topic
+
             in query_normalized
+
         ):
 
             if (
+
                 normalized_topic
+
                 in content
+
             ):
 
                 score += 15
@@ -1497,22 +2229,29 @@ def calculate_post_score(
     important_words = {
 
         "ايميل",
+
         "الايميل",
+
         "بريد",
 
         "تفعيل",
 
         "بلاك",
+
         "بورد",
 
         "رقم",
+
         "جامعي",
 
         "تخصص",
+
         "تحويل",
 
         "انسحاب",
+
         "اعتذار",
+
         "تاجيل",
 
         "جدول",
@@ -1520,9 +2259,11 @@ def calculate_post_score(
         "تدريب",
 
         "اختبار",
+
         "اختبارات",
 
         "نتائج",
+
         "درجات",
 
         "ايبان",
@@ -1532,10 +2273,13 @@ def calculate_post_score(
         "نفاذ",
 
         "كلمه",
+
         "مرور",
 
         "تسجيل",
+
         "قبول",
+
     }
 
 
@@ -1544,17 +2288,24 @@ def calculate_post_score(
         useful_words
 
         .intersection(
+
             important_words
+
         )
 
         .intersection(
+
             content_words
+
         )
+
     )
 
 
     score += (
+
         len(important_matches) * 10
+
     )
 
 
@@ -1575,14 +2326,18 @@ def find_best_channel_post(
 
 
     best_item = None
+
     best_score = 0
 
 
     for item in channel_database:
 
         score = calculate_post_score(
+
             query,
+
             item
+
         )
 
 
@@ -1594,20 +2349,30 @@ def find_best_channel_post(
 
 
         elif (
+
             score == best_score
+
             and score > 0
+
             and best_item is not None
+
         ):
 
             current_id = item.get(
+
                 "message_id",
+
                 0
+
             )
 
 
             best_id = best_item.get(
+
                 "message_id",
+
                 0
+
             )
 
 
@@ -1617,8 +2382,11 @@ def find_best_channel_post(
 
 
     return (
+
         best_item,
+
         best_score
+
     )
 
 
@@ -1631,7 +2399,9 @@ def get_response_intro(
 ):
 
     normalized = normalize_text(
+
         user_text
+
     )
 
 
@@ -1640,15 +2410,23 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "ايميل" in normalized
+
         or "الايميل" in normalized
+
         or "بريد" in normalized
+
         or "البريد" in normalized
+
     ):
 
         return (
+
             "لتفعيل البريد الجامعي "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1657,14 +2435,21 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "بلاك بورد" in normalized
+
         or "البلاك بورد" in normalized
+
         or "blackboard" in normalized
+
     ):
 
         return (
+
             "للدخول إلى بلاك بورد "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1673,14 +2458,21 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "رقم جامعي" in normalized
+
         or "الرقم الجامعي" in normalized
+
         or "رقمي الجامعي" in normalized
+
     ):
 
         return (
+
             "للحصول على الرقم الجامعي "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1689,13 +2481,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "تسجيل" in normalized
+
         or "التسجيل" in normalized
+
     ):
 
         return (
+
             "لإتمام التسجيل "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1704,13 +2502,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "قبول" in normalized
+
         or "القبول" in normalized
+
     ):
 
         return (
+
             "بخصوص القبول، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1719,15 +2523,23 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "مكافاه" in normalized
+
         or "مكافاة" in normalized
+
         or "مكافآت" in normalized
+
         or "مكافئات" in normalized
+
     ):
 
         return (
+
             "بخصوص المكافأة، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1736,14 +2548,21 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "ايبان" in normalized
+
         or "الايبان" in normalized
+
         or "iban" in normalized
+
     ):
 
         return (
+
             "لإضافة أو تحديث الآيبان "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1752,13 +2571,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "تخصص" in normalized
+
         or "التخصص" in normalized
+
     ):
 
         return (
+
             "بخصوص التخصص، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1767,13 +2592,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "تحويل" in normalized
+
         or "التحويل" in normalized
+
     ):
 
         return (
+
             "بخصوص التحويل، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1784,8 +2615,11 @@ def get_response_intro(
     if "اعتذار" in normalized:
 
         return (
+
             "بخصوص الاعتذار، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1794,13 +2628,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "تاجيل" in normalized
+
         or "تأجيل" in user_text
+
     ):
 
         return (
+
             "بخصوص التأجيل، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1809,13 +2649,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "انسحاب" in normalized
+
         or "الانسحاب" in normalized
+
     ):
 
         return (
+
             "بخصوص الانسحاب، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1824,13 +2670,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "جدول" in normalized
+
         or "الجداول" in normalized
+
     ):
 
         return (
+
             "بخصوص الجدول الدراسي، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1841,8 +2693,11 @@ def get_response_intro(
     if "تدريب" in normalized:
 
         return (
+
             "بخصوص التدريب، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1851,13 +2706,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "اختبار" in normalized
+
         or "اختبارات" in normalized
+
     ):
 
         return (
+
             "بخصوص الاختبارات، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1866,15 +2727,23 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "نتائج" in normalized
+
         or "نتيجة" in normalized
+
         or "درجات" in normalized
+
         or "درجة" in normalized
+
     ):
 
         return (
+
             "بخصوص النتائج والدرجات، "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1885,8 +2754,11 @@ def get_response_intro(
     if "نفاذ" in normalized:
 
         return (
+
             "للدخول عن طريق نفاذ "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1895,16 +2767,25 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "كلمه المرور" in normalized
+
         or "كلمه السر" in normalized
+
         or "باسورد" in normalized
+
         or "كلمه" in normalized
+
         and "مرور" in normalized
+
     ):
 
         return (
+
             "لاستعادة أو تغيير كلمة المرور "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1913,13 +2794,19 @@ def get_response_intro(
     # --------------------------------------------------------
 
     if (
+
         "خدمات الكترونيه" in normalized
+
         or "الخدمات الالكترونيه" in normalized
+
     ):
 
         return (
+
             "للدخول إلى الخدمات الإلكترونية "
+
             "اتبع الخطوات التالية:"
+
         )
 
 
@@ -1928,8 +2815,11 @@ def get_response_intro(
     # --------------------------------------------------------
 
     return (
+
         "بخصوص استفسارك، "
+
         "اتبع الخطوات التالية:"
+
     )
 
 
@@ -1948,13 +2838,18 @@ def create_guide_response(
 
 
     intro = get_response_intro(
+
         user_text
+
     )
 
 
     safe_link = html.escape(
+
         link,
+
         quote=True
+
     )
 
 
@@ -1965,8 +2860,11 @@ def create_guide_response(
         "للدخول للخطوات والشرح\n"
 
         f'<a href="{safe_link}">'
+
         "📎 اضغط هنا 📎"
+
         "</a>"
+
     )
 
 
@@ -1986,23 +2884,31 @@ async def send_guide_response(
 
 
     link = item.get(
+
         "link",
+
         ""
+
     )
 
 
     if not link:
 
         print(
+
             "❌ المنشور لا يحتوي على رابط."
+
         )
 
         return False
 
 
     response = create_guide_response(
+
         user_text,
+
         link
+
     )
 
 
@@ -2020,6 +2926,7 @@ async def send_guide_response(
             parse_mode="HTML",
 
             disable_web_page_preview=True
+
         )
 
 
@@ -2029,8 +2936,11 @@ async def send_guide_response(
     except Exception as e:
 
         print(
+
             f"Send Guide Response Error: "
+
             f"{repr(e)}"
+
         )
 
 
@@ -2053,21 +2963,30 @@ async def start(
     # --------------------------------------------------------
 
     if not is_authorized(
+
         update
+
     ):
 
         log_unauthorized(
+
             update
+
         )
 
         return
 
 
     print(
+
         f"/start من المستخدم: "
+
         f"{update.effective_user.id}"
+
         if update.effective_user
+
         else "/start"
+
     )
 
 
@@ -2080,59 +2999,77 @@ def log_unauthorized(
 ):
 
     user = (
+
         update.effective_user
+
     )
 
 
     chat = (
+
         update.effective_chat
+
     )
 
 
     print("")
+
     print("=" * 60)
 
 
     print(
+
         "محاولة استخدام غير مصرح بها"
+
     )
 
 
     if chat:
 
         print(
+
             f"Chat ID: {chat.id}"
+
         )
 
 
         print(
+
             f"Chat Type: {chat.type}"
+
         )
 
 
     if user:
 
         print(
+
             f"User ID: {user.id}"
+
         )
 
 
         if user.username:
 
             print(
-                f"Username: @{user.username}"
-            )
 
+                f"Username: @{user.username}"
+
+            )
 
         else:
 
             print(
+
                 "Username: لا يوجد"
+
             )
 
 
         print(
+
             f"Full Name: {user.full_name}"
+
         )
 
 
@@ -2153,7 +3090,9 @@ def is_authorized(
 
 
     chat_type = (
+
         update.effective_chat.type
+
     )
 
 
@@ -2174,6 +3113,7 @@ def is_authorized(
             update.effective_chat.id
 
             in ALLOWED_GROUPS
+
         )
 
 
@@ -2193,6 +3133,7 @@ def is_authorized(
             update.effective_user.id
 
             in ALLOWED_USERS
+
         )
 
 
@@ -2218,14 +3159,19 @@ async def reply_message(
     # --------------------------------------------------------
 
     if not is_authorized(
+
         update
+
     ):
 
         log_unauthorized(
+
             update
+
         )
 
         # لا نرسل أي رد
+
         return
 
 
@@ -2262,27 +3208,112 @@ async def reply_message(
         return
 
 
+    # ========================================================
+    # نظام المكافأة الشهرية
+    # ========================================================
+    #
+    # مهم:
+    # إذا كان السؤال عن المكافأة يتم الرد من النظام
+    # مباشرة، ولا يتم البحث داخل منشورات القناة.
+    # ========================================================
+
+    if is_stipend_question(
+
+        user_text
+
+    ):
+
+        print("")
+
+        print("=" * 70)
+
+        print(
+
+            f"💰 سؤال عن المكافأة: "
+
+            f"{user_text}"
+
+        )
+
+        print(
+
+            "سيتم استخدام نظام المكافأة مباشرة."
+
+        )
+
+        print("=" * 70)
+
+
+        try:
+
+            stipend_response = (
+
+                create_stipend_response()
+
+            )
+
+
+            await update.message.reply_text(
+
+                stipend_response,
+
+                parse_mode="HTML",
+
+                disable_web_page_preview=True
+
+            )
+
+
+            print(
+
+                "✅ تم إرسال معلومات المكافأة."
+
+            )
+
+
+        except Exception as e:
+
+            print(
+
+                "❌ خطأ في نظام المكافأة: "
+
+                f"{repr(e)}"
+
+            )
+
+
+        return
+
+
     # --------------------------------------------------------
     # طباعة السؤال
     # --------------------------------------------------------
 
     print("")
+
     print("=" * 70)
 
 
     print(
+
         f"سؤال الطالب: {user_text}"
+
     )
 
 
     print(
+
         f"User ID: {user_id}"
+
     )
 
 
     print(
+
         f"عدد منشورات القناة: "
+
         f"{len(channel_database)}"
+
     )
 
 
@@ -2291,35 +3322,49 @@ async def reply_message(
     # --------------------------------------------------------
 
     best_post, best_score = (
+
         find_best_channel_post(
+
             user_text
+
         )
+
     )
 
 
     print(
+
         f"أفضل نتيجة: {best_score}"
+
     )
 
 
     if best_post:
 
         print(
+
             f"أفضل منشور: "
+
             f"{best_post.get('message_id')}"
+
         )
 
 
         print(
+
             f"النص: "
+
             f"{best_post.get('text', '')[:250]}"
+
         )
 
 
     else:
 
         print(
+
             "لا يوجد منشور مطابق."
+
         )
 
 
@@ -2334,7 +3379,9 @@ async def reply_message(
     if not best_post:
 
         print(
+
             "❌ لا يوجد منشور مناسب → لا يوجد رد."
+
         )
 
         return
@@ -2350,13 +3397,18 @@ async def reply_message(
     if best_score < MIN_MATCH_SCORE:
 
         print(
+
             f"❌ التطابق ضعيف "
+
             f"({best_score} < {MIN_MATCH_SCORE})"
+
         )
 
 
         print(
+
             "لن يتم إرسال أي رد."
+
         )
 
 
@@ -2369,12 +3421,16 @@ async def reply_message(
     # ========================================================
 
     print(
+
         "✅ تم العثور على منشور مناسب."
+
     )
 
 
     print(
+
         "سيتم إرسال الرد الإرشادي فقط."
+
     )
 
 
@@ -2385,19 +3441,24 @@ async def reply_message(
         user_text,
 
         best_post
+
     )
 
 
     if sent:
 
         print(
+
             "✅ تم إرسال الرد بنجاح."
+
         )
 
     else:
 
         print(
+
             "❌ فشل إرسال الرد."
+
         )
 
 
@@ -2413,11 +3474,14 @@ async def on_startup(
 
 
     print("")
+
     print("=" * 70)
 
 
     print(
+
         "بدء تشغيل DaliliSaudiBot..."
+
     )
 
 
@@ -2425,38 +3489,56 @@ async def on_startup(
 
 
     print(
+
         f"Bisha Channel ID Bot API: "
+
         f"{BISHA_CHANNEL_ID}"
+
     )
 
 
     print(
+
         f"Bisha Channel ID Telethon: "
+
         f"{BISHA_TELETHON_CHANNEL_ID}"
+
     )
 
 
     print(
+
         f"Bisha Channel: "
+
         f"@{BISHA_CHANNEL_USERNAME}"
+
     )
 
 
     print(
+
         f"Allowed Groups: "
+
         f"{ALLOWED_GROUPS}"
+
     )
 
 
     print(
+
         f"Allowed Users: "
+
         f"{ALLOWED_USERS}"
+
     )
 
 
     print(
+
         f"Saved Channel Posts قبل الاستيراد: "
+
         f"{len(channel_database)}"
+
     )
 
 
@@ -2471,8 +3553,11 @@ async def on_startup(
 
 
     print(
+
         f"Saved Channel Posts بعد الاستيراد: "
+
         f"{len(channel_database)}"
+
     )
 
 
@@ -2480,17 +3565,30 @@ async def on_startup(
 
 
     print(
+
         "✅ تم تجهيز قاعدة منشورات قناة جامعة بيشة."
+
     )
 
 
     print(
+
         "✅ البوت لن يجيب إلا عند وجود منشور مطابق."
+
     )
 
 
     print(
+
+        "✅ نظام المكافأة يعمل بشكل مستقل."
+
+    )
+
+
+    print(
+
         "✅ الذكاء الاصطناعي غير مستخدم في الردود."
+
     )
 
 
@@ -2506,8 +3604,11 @@ async def on_shutdown(
 ):
 
     print("")
+
     print(
+
         "تم إيقاف DaliliSaudiBot."
+
     )
 
 
@@ -2522,18 +3623,25 @@ def main():
         Application.builder()
 
         .token(
+
             TOKEN
+
         )
 
         .post_init(
+
             on_startup
+
         )
 
         .post_shutdown(
+
             on_shutdown
+
         )
 
         .build()
+
     )
 
 
@@ -2548,7 +3656,9 @@ def main():
             "start",
 
             start
+
         )
+
     )
 
 
@@ -2563,7 +3673,9 @@ def main():
             filters.UpdateType.CHANNEL_POST,
 
             handle_channel_post
+
         )
+
     )
 
 
@@ -2580,7 +3692,9 @@ def main():
             & ~filters.COMMAND,
 
             reply_message
+
         )
+
     )
 
 
@@ -2589,41 +3703,59 @@ def main():
     # --------------------------------------------------------
 
     print("")
+
     print("=" * 70)
 
 
     print(
+
         "DaliliSaudiBot is starting..."
+
     )
 
 
     print(
+
         f"Bisha Channel ID Bot API: "
+
         f"{BISHA_CHANNEL_ID}"
+
     )
 
 
     print(
+
         f"Bisha Channel ID Telethon: "
+
         f"{BISHA_TELETHON_CHANNEL_ID}"
+
     )
 
 
     print(
+
         f"Bisha Channel: "
+
         f"@{BISHA_CHANNEL_USERNAME}"
+
     )
 
 
     print(
+
         f"Allowed Groups: "
+
         f"{ALLOWED_GROUPS}"
+
     )
 
 
     print(
+
         f"Allowed Users: "
+
         f"{ALLOWED_USERS}"
+
     )
 
 
@@ -2637,6 +3769,7 @@ def main():
     app.run_polling(
 
         allowed_updates=Update.ALL_TYPES
+
     )
 
 
@@ -2653,22 +3786,29 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
 
         print(
+
             "تم إيقاف البوت يدويًا."
+
         )
 
     except Exception as e:
 
         print("")
+
         print("=" * 70)
 
 
         print(
+
             "❌ خطأ أثناء تشغيل البوت:"
+
         )
 
 
         print(
+
             repr(e)
+
         )
 
 
