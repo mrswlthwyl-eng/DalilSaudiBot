@@ -3,16 +3,16 @@ import json
 import asyncio
 
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 
 
 # ============================================================
 # إعدادات Telegram API
 # ============================================================
 
-SESSION_NAME = "bisha_channel_import_session"
-
 API_ID = os.getenv("TELEGRAM_API_ID")
 API_HASH = os.getenv("TELEGRAM_API_HASH")
+TELEGRAM_SESSION = os.getenv("TELEGRAM_SESSION")
 
 if not API_ID:
     raise RuntimeError(
@@ -22,6 +22,11 @@ if not API_ID:
 if not API_HASH:
     raise RuntimeError(
         "TELEGRAM_API_HASH غير موجود في Environment Variables"
+    )
+
+if not TELEGRAM_SESSION:
+    raise RuntimeError(
+        "TELEGRAM_SESSION غير موجود في Environment Variables"
     )
 
 try:
@@ -47,7 +52,13 @@ CHANNEL_ID = -1004493313338
 # قاعدة المعرفة
 # ============================================================
 
-DATABASE_FILE = "bisha_channel_knowledge.json"
+# إذا كان Railway Volume موجودًا في /data سيتم استخدامه.
+# وإذا لم يكن موجودًا سيتم استخدام المجلد الحالي.
+
+if os.path.isdir("/data"):
+    DATABASE_FILE = "/data/bisha_channel_knowledge.json"
+else:
+    DATABASE_FILE = "bisha_channel_knowledge.json"
 
 
 # ============================================================
@@ -164,8 +175,24 @@ def save_database(database):
             )
         )
 
+        # التأكد من وجود مجلد قاعدة البيانات
+        database_directory = os.path.dirname(
+            DATABASE_FILE
+        )
+
+        if database_directory:
+            os.makedirs(
+                database_directory,
+                exist_ok=True
+            )
+
+        # حفظ مؤقت ثم استبدال الملف
+        temporary_file = (
+            DATABASE_FILE + ".tmp"
+        )
+
         with open(
-            DATABASE_FILE,
+            temporary_file,
             "w",
             encoding="utf-8"
         ) as file:
@@ -176,6 +203,11 @@ def save_database(database):
                 ensure_ascii=False,
                 indent=2
             )
+
+        os.replace(
+            temporary_file,
+            DATABASE_FILE
+        )
 
         print(
             f"تم حفظ {len(database)} منشور في قاعدة المعرفة."
@@ -281,6 +313,10 @@ async def import_channel():
         f"Channel ID: {CHANNEL_ID}"
     )
 
+    print(
+        f"ملف قاعدة المعرفة: {DATABASE_FILE}"
+    )
+
     print("=" * 70)
 
     # ========================================================
@@ -300,35 +336,7 @@ async def import_channel():
     )
 
     # ========================================================
-    # التحقق من ملف الجلسة
-    # ========================================================
-
-    session_file = (
-        SESSION_NAME + ".session"
-    )
-
-    if not os.path.exists(
-        session_file
-    ):
-
-        print("")
-        print(
-            "خطأ: ملف جلسة Telegram غير موجود."
-        )
-
-        print(
-            f"الملف المطلوب: {session_file}"
-        )
-
-        print("")
-        print(
-            "شغّل login_telegram.py أولًا لتسجيل الدخول."
-        )
-
-        return
-
-    # ========================================================
-    # إنشاء عميل Telegram
+    # إنشاء عميل Telegram باستخدام StringSession
     # ========================================================
 
     print("")
@@ -337,12 +345,16 @@ async def import_channel():
     )
 
     client = TelegramClient(
-        SESSION_NAME,
+        StringSession(TELEGRAM_SESSION),
         API_ID,
         API_HASH
     )
 
     try:
+
+        # ====================================================
+        # الاتصال
+        # ====================================================
 
         await client.connect()
 
@@ -354,14 +366,12 @@ async def import_channel():
 
             print("")
             print(
-                "الجلسة غير مسجلة الدخول."
+                "خطأ: TELEGRAM_SESSION غير مصرح به."
             )
 
             print(
-                "شغّل login_telegram.py أولًا."
+                "تأكد من إنشاء TELEGRAM_SESSION من الحساب الصحيح."
             )
-
-            await client.disconnect()
 
             return
 
@@ -423,8 +433,6 @@ async def import_channel():
                 f"الخطأ: {e}"
             )
 
-            await client.disconnect()
-
             return
 
         # ====================================================
@@ -449,7 +457,7 @@ async def import_channel():
         )
 
         print(
-            f"Channel ID: {real_channel_id}"
+            f"Channel ID الداخلي: {real_channel_id}"
         )
 
         # ====================================================
@@ -485,8 +493,6 @@ async def import_channel():
             print(
                 f"ID المطلوب: {expected_channel_id}"
             )
-
-            await client.disconnect()
 
             return
 
@@ -587,13 +593,21 @@ async def import_channel():
                 ] = record
 
                 # --------------------------------------------
-                # عرض التقدم
+                # حفظ دوري كل 100 منشور
                 # --------------------------------------------
 
                 if (
-                    total_messages % 50
+                    total_messages % 100
                     == 0
                 ):
+
+                    database = list(
+                        posts.values()
+                    )
+
+                    save_database(
+                        database
+                    )
 
                     print(
                         f"تمت قراءة: "
@@ -649,12 +663,12 @@ async def import_channel():
         )
 
         # ====================================================
-        # حفظ قاعدة المعرفة
+        # حفظ قاعدة المعرفة النهائية
         # ====================================================
 
         print("")
         print(
-            "جاري حفظ قاعدة المعرفة..."
+            "جاري حفظ قاعدة المعرفة النهائية..."
         )
 
         save_database(
@@ -715,7 +729,7 @@ async def import_channel():
         print("=" * 70)
 
         # ====================================================
-        # آخر منشور
+        # آخر منشور محفوظ
         # ====================================================
 
         if database:
@@ -743,7 +757,7 @@ async def import_channel():
         )
 
         print(
-            "يمكن الآن استخدام قاعدة المعرفة مع main.py."
+            "أصبح ملف قاعدة المعرفة جاهزًا للاستخدام مع main.py."
         )
 
         print("=" * 70)
