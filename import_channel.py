@@ -31,6 +31,7 @@ if not TELEGRAM_SESSION:
 
 try:
     API_ID = int(API_ID)
+
 except ValueError:
     raise RuntimeError(
         "TELEGRAM_API_ID يجب أن يكون رقمًا صحيحًا"
@@ -38,7 +39,7 @@ except ValueError:
 
 
 # ============================================================
-# قناة جامعة بيشة
+# معلومات قناة جامعة بيشة
 # ============================================================
 
 CHANNEL_USERNAME = "Bishauniversity3"
@@ -52,13 +53,7 @@ CHANNEL_ID = -1004493313338
 # قاعدة المعرفة
 # ============================================================
 
-# إذا كان Railway Volume موجودًا في /data سيتم استخدامه.
-# وإذا لم يكن موجودًا سيتم استخدام المجلد الحالي.
-
-if os.path.isdir("/data"):
-    DATABASE_FILE = "/data/bisha_channel_knowledge.json"
-else:
-    DATABASE_FILE = "bisha_channel_knowledge.json"
+DATABASE_FILE = "bisha_channel_knowledge.json"
 
 
 # ============================================================
@@ -66,6 +61,7 @@ else:
 # ============================================================
 
 def get_message_text(message):
+
     if not message:
         return ""
 
@@ -86,6 +82,7 @@ def get_message_text(message):
 # ============================================================
 
 def normalize_text(text):
+
     if not text:
         return ""
 
@@ -103,6 +100,7 @@ def normalize_text(text):
     }
 
     for old, new in replacements.items():
+
         text = text.replace(
             old,
             new
@@ -118,6 +116,7 @@ def normalize_text(text):
 # ============================================================
 
 def make_message_link(message_id):
+
     return (
         f"{CHANNEL_URL}/{message_id}"
     )
@@ -132,6 +131,7 @@ def load_database():
     if not os.path.exists(
         DATABASE_FILE
     ):
+
         return []
 
     try:
@@ -148,6 +148,7 @@ def load_database():
             data,
             list
         ):
+
             return data
 
     except Exception as e:
@@ -175,24 +176,14 @@ def save_database(database):
             )
         )
 
-        # التأكد من وجود مجلد قاعدة البيانات
-        database_directory = os.path.dirname(
-            DATABASE_FILE
-        )
-
-        if database_directory:
-            os.makedirs(
-                database_directory,
-                exist_ok=True
-            )
-
-        # حفظ مؤقت ثم استبدال الملف
-        temporary_file = (
+        # حفظ مؤقت أولًا ثم استبدال الملف
+        # لتقليل احتمال تلف JSON
+        temp_file = (
             DATABASE_FILE + ".tmp"
         )
 
         with open(
-            temporary_file,
+            temp_file,
             "w",
             encoding="utf-8"
         ) as file:
@@ -205,7 +196,7 @@ def save_database(database):
             )
 
         os.replace(
-            temporary_file,
+            temp_file,
             DATABASE_FILE
         )
 
@@ -237,10 +228,13 @@ def create_record(message):
     )
 
     if media:
+
         media_type = (
             media.__class__.__name__
         )
+
     else:
+
         media_type = "text"
 
     return {
@@ -313,11 +307,8 @@ async def import_channel():
         f"Channel ID: {CHANNEL_ID}"
     )
 
-    print(
-        f"ملف قاعدة المعرفة: {DATABASE_FILE}"
-    )
-
     print("=" * 70)
+
 
     # ========================================================
     # تحميل قاعدة المعرفة الموجودة
@@ -335,13 +326,14 @@ async def import_channel():
         f"المنشورات الموجودة مسبقًا: {len(posts)}"
     )
 
+
     # ========================================================
-    # إنشاء عميل Telegram باستخدام StringSession
+    # إنشاء Telegram Client باستخدام StringSession
     # ========================================================
 
     print("")
     print(
-        "جاري تشغيل جلسة Telegram..."
+        "جاري تشغيل جلسة Telegram من TELEGRAM_SESSION..."
     )
 
     client = TelegramClient(
@@ -349,6 +341,7 @@ async def import_channel():
         API_ID,
         API_HASH
     )
+
 
     try:
 
@@ -358,6 +351,11 @@ async def import_channel():
 
         await client.connect()
 
+        print(
+            "تم الاتصال بـ Telegram."
+        )
+
+
         # ====================================================
         # التحقق من تسجيل الدخول
         # ====================================================
@@ -366,18 +364,15 @@ async def import_channel():
 
             print("")
             print(
-                "خطأ: TELEGRAM_SESSION غير مصرح به."
-            )
-
-            print(
-                "تأكد من إنشاء TELEGRAM_SESSION من الحساب الصحيح."
+                "خطأ: TELEGRAM_SESSION غير صالحة أو انتهت صلاحيتها."
             )
 
             return
 
         print(
-            "تم الاتصال بحساب Telegram بنجاح."
+            "تم التحقق من جلسة Telegram بنجاح."
         )
+
 
         # ====================================================
         # معلومات الحساب
@@ -387,6 +382,7 @@ async def import_channel():
 
             me = await client.get_me()
 
+            print("")
             print(
                 f"الحساب: {me.first_name or ''}"
             )
@@ -406,6 +402,7 @@ async def import_channel():
             print(
                 f"تعذر قراءة معلومات الحساب: {e}"
             )
+
 
         # ====================================================
         # الوصول إلى القناة
@@ -435,6 +432,7 @@ async def import_channel():
 
             return
 
+
         # ====================================================
         # معلومات القناة
         # ====================================================
@@ -457,8 +455,9 @@ async def import_channel():
         )
 
         print(
-            f"Channel ID الداخلي: {real_channel_id}"
+            f"Channel ID: {real_channel_id}"
         )
+
 
         # ====================================================
         # التحقق من القناة
@@ -501,6 +500,7 @@ async def import_channel():
             "تم التحقق من قناة جامعة بيشة بنجاح."
         )
 
+
         # ====================================================
         # قراءة جميع المنشورات السابقة
         # ====================================================
@@ -518,12 +518,14 @@ async def import_channel():
         )
         print("=" * 70)
 
+
         total_messages = 0
         saved_messages = 0
         updated_messages = 0
         text_messages = 0
         media_messages = 0
         empty_messages = 0
+
 
         try:
 
@@ -534,9 +536,19 @@ async def import_channel():
 
                 total_messages += 1
 
+
+                # --------------------------------------------
+                # استخراج النص
+                # --------------------------------------------
+
                 text = get_message_text(
                     message
                 )
+
+
+                # --------------------------------------------
+                # التحقق من الوسائط
+                # --------------------------------------------
 
                 has_media = bool(
                     getattr(
@@ -545,6 +557,7 @@ async def import_channel():
                         None
                     )
                 )
+
 
                 # --------------------------------------------
                 # منشور بدون نص
@@ -562,7 +575,9 @@ async def import_channel():
 
                     continue
 
+
                 text_messages += 1
+
 
                 # --------------------------------------------
                 # إنشاء سجل المنشور
@@ -576,8 +591,9 @@ async def import_channel():
                     message.id
                 )
 
+
                 # --------------------------------------------
-                # تحديد جديد أو محدث
+                # جديد أو موجود
                 # --------------------------------------------
 
                 if message_id in posts:
@@ -588,26 +604,20 @@ async def import_channel():
 
                     saved_messages += 1
 
+
                 posts[
                     message_id
                 ] = record
 
+
                 # --------------------------------------------
-                # حفظ دوري كل 100 منشور
+                # عرض التقدم
                 # --------------------------------------------
 
                 if (
-                    total_messages % 100
+                    total_messages % 50
                     == 0
                 ):
-
-                    database = list(
-                        posts.values()
-                    )
-
-                    save_database(
-                        database
-                    )
 
                     print(
                         f"تمت قراءة: "
@@ -622,6 +632,25 @@ async def import_channel():
                         f"{media_messages}"
                     )
 
+
+                # --------------------------------------------
+                # حفظ دوري كل 500 منشور
+                # --------------------------------------------
+
+                if (
+                    total_messages % 500
+                    == 0
+                ):
+
+                    print("")
+                    print(
+                        "حفظ نسخة احتياطية مؤقتة من البيانات..."
+                    )
+
+                    save_database(
+                        list(posts.values())
+                    )
+
         except Exception as e:
 
             print("")
@@ -629,7 +658,9 @@ async def import_channel():
                 "حدث خطأ أثناء قراءة القناة:"
             )
 
-            print(e)
+            print(
+                e
+            )
 
             # حفظ ما تم جمعه حتى لحظة الخطأ
             database = list(
@@ -642,6 +673,7 @@ async def import_channel():
 
             raise
 
+
         # ====================================================
         # تحويل البيانات إلى قائمة
         # ====================================================
@@ -649,6 +681,7 @@ async def import_channel():
         database = list(
             posts.values()
         )
+
 
         # ====================================================
         # ترتيب المنشورات
@@ -662,8 +695,9 @@ async def import_channel():
             )
         )
 
+
         # ====================================================
-        # حفظ قاعدة المعرفة النهائية
+        # الحفظ النهائي
         # ====================================================
 
         print("")
@@ -674,6 +708,7 @@ async def import_channel():
         save_database(
             database
         )
+
 
         # ====================================================
         # عرض النتيجة
@@ -728,17 +763,36 @@ async def import_channel():
 
         print("=" * 70)
 
+
         # ====================================================
-        # آخر منشور محفوظ
+        # أول وآخر منشور
         # ====================================================
 
         if database:
+
+            first_post = database[0]
 
             last_post = database[-1]
 
             print("")
             print(
-                "آخر منشور محفوظ:"
+                "أقدم منشور محفوظ:"
+            )
+
+            print(
+                f"رقم المنشور: "
+                f"{first_post.get('message_id')}"
+            )
+
+            print(
+                f"الرابط: "
+                f"{first_post.get('link')}"
+            )
+
+            print("")
+
+            print(
+                "أحدث منشور محفوظ:"
             )
 
             print(
@@ -751,16 +805,18 @@ async def import_channel():
                 f"{last_post.get('link')}"
             )
 
+
         print("")
         print(
             "تم حفظ المنشورات القديمة بنجاح."
         )
 
         print(
-            "أصبح ملف قاعدة المعرفة جاهزًا للاستخدام مع main.py."
+            "يمكن الآن استخدام قاعدة المعرفة مع main.py."
         )
 
         print("=" * 70)
+
 
     finally:
 
@@ -795,8 +851,13 @@ if __name__ == "__main__":
 
         print("")
         print("=" * 70)
+
         print(
             "حدث خطأ:"
         )
-        print(e)
+
+        print(
+            e
+        )
+
         print("=" * 70)
